@@ -33,7 +33,7 @@ try {
   compose('stop', 'postgres');
   assert.equal(await status('/health/live'), 200);
   await waitForReadiness(503);
-  compose('start', '--wait', 'postgres');
+  compose('start', 'postgres');
   await waitForReadiness(200);
   compose('stop', '-t', '25', 'app');
   const id = compose('ps', '-a', '-q', 'app');
