@@ -12,7 +12,7 @@ No live analytics data is collected by this foundation.
 
 ## Run locally
 
-Install Node **24.22.0**, pnpm **11.25.0**, and Docker with Compose v2 or later.
+Install Node **24.22.0**, pnpm **11.25.0**, and Docker with its Compose plugin.
 PostgreSQL **18.6** runs in Compose; no host PostgreSQL installation is needed.
 
 ```sh

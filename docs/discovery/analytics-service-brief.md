@@ -1,7 +1,7 @@
 # Analytics service: product brief
 
-Status: product scope confirmed in Q45 on 2026-10-20; initial workload and
-portability requirement clarified afterward.
+Status: accepted product scope, 2026-10-20, including the initial workload
+and portability requirements.
 This brief consolidates the discovery conducted before repository creation.
 See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)

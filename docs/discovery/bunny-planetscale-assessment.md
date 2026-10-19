@@ -1,6 +1,6 @@
 # Bunny and PlanetScale: feasibility, operations, cost, and portability
 
-Assessment date: 2026-10-20. Product scope confirmed in Q45; see the
+Assessment date: 2026-10-20. For the accepted product scope, see the
 [product brief](analytics-service-brief.md). This is a source-backed design
 assessment and arithmetic model, not a deployed prototype or capacity benchmark.
 The initial PS-5 recommendation was replaced by the selected PS-10 starting
