@@ -9,6 +9,12 @@
   1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
 - Initial forecast: about 1,000 pageviews/day, assumed portfolio-wide for sizing.
 - Requirements: [confirmed brief](../discovery/analytics-service-brief.md).
+- Product decisions: [scope and priorities](../adr/0004-product-scope-and-priorities.md),
+  [observations](../adr/0005-structured-observations.md),
+  [privacy/recognition](../adr/0006-privacy-consent-and-recognition.md),
+  [lifecycle](../adr/0007-data-lifecycle-and-evidence.md),
+  [reports/MCP](../adr/0008-proactive-reports-and-internal-mcp.md), and
+  [advertising](../adr/0009-advertising-measurement.md).
 - Rationale: [ADR index](../adr/README.md), including the
   [portable container/Postgres decision](../adr/0001-portable-container-and-postgres.md)
   and [Rust backend decision](../adr/0003-rust-backend.md).

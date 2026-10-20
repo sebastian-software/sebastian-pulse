@@ -1,15 +1,16 @@
-# Use living architecture decision records
+# Use living product and architecture decision records
 
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Establish the living lifecycle for all ADRs in this repository.
+- Change note: Include durable product scope, priorities, and policies in the living ADR corpus.
 
 ## Context
 
-Architecture decisions must remain available to people and AI agents across
-sessions and tools. Reading the current direction should not require reconstructing
-chat history or following a chain of decisions that replaced one another.
+Product and architecture decisions must remain available to people and AI agents
+across sessions and tools. Reading the current direction should not require
+reconstructing chat history or following a chain of decisions that replaced one
+another.
 
 ## Decision
 
@@ -33,10 +34,12 @@ Write repository content, including ADRs and agent instructions, in US English.
   when the task changes their decision. Unresolved choices stay explicit;
   a proposal stays proposed until there is an agreed direction.
 
-ADRs contain rationale and boundaries. Requirements, delivery tasks, commands,
-provider settings, and verification results keep their existing owners and are
-linked where useful. Do not store secrets, personal data, or private chat and
-approval transcripts in an ADR.
+ADRs own durable product and architecture choices, including feature scope,
+priorities, exclusions, measurement policy, and access boundaries. Link the
+consolidated requirements in the product brief and the delivery work in the
+implementation plan; keep them aligned when a decision changes. Commands,
+provider settings, and verification results keep their existing owners. Do not
+store secrets, personal data, or private chat and approval transcripts in an ADR.
 
 ## Consequences
 

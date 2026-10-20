@@ -2,12 +2,24 @@
 
 Status: accepted product scope, 2026-10-20, including the initial workload
 and portability requirements.
-This brief consolidates the discovery conducted before repository creation.
+This brief consolidates detailed requirements from discovery. The
+[ADR index](../adr/README.md) records the decisions and rationale behind this
+scope, starting with [scope and priorities](../adr/0004-product-scope-and-priorities.md).
+Keep this consolidation aligned when a living product decision changes.
 See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)
 for the selected Bunny Magic Containers / PlanetScale PS-10 starting configuration.
 The Package 1 local foundation is implemented in this repository. Provider
 provisioning has not started. See the README for its commands and evidence.
+
+| Product decision | Owning record |
+| --- | --- |
+| Coverage, P1/P2/P3, pilot and exclusions | [ADR 0004](../adr/0004-product-scope-and-priorities.md) |
+| Behavior streams, CLI units, traffic classification and freshness | [ADR 0005](../adr/0005-structured-observations.md) |
+| Consent, regional policy, recognition and AI processing boundaries | [ADR 0006](../adr/0006-privacy-consent-and-recognition.md) |
+| Retention, corrections, deletion and restored data | [ADR 0007](../adr/0007-data-lifecycle-and-evidence.md) |
+| Proactive reports, recipient access, internal MCP and admin | [ADR 0008](../adr/0008-proactive-reports-and-internal-mcp.md) |
+| Advertising integrations, attribution and later exports | [ADR 0009](../adr/0009-advertising-measurement.md) |
 
 ## Product outcome
 
@@ -106,16 +118,16 @@ The selected shape is one Rust backend on Bunny Magic Containers with
 PlanetScale Postgres PS-10 single node in Frankfurt. Browser SDK and interface
 code remain TypeScript. See the [ADR index](../adr/README.md), especially the
 [Rust backend decision](../adr/0003-rust-backend.md). Keep provider switching
-practical through a standard container, conventional Postgres, portable event contracts, and a verified export
-path. Preserve existing public OSS Metrics contracts; the analytics
-service has its own repository and runtime.
+practical through a standard container, conventional Postgres, portable event
+contracts, and a verified export path. Preserve existing public OSS Metrics
+contracts; the analytics service has its own repository and runtime.
 
 The next design pass must resolve Rust-compatible authentication, live database
 compatibility, durable scheduled work, collection peaks and event volume, cost
-boundaries, access roles, actual region/purpose rules, recognition validation, CLI platform derivation and
-shared/CI permission handling, advertising integration details, and deletion
-propagation. Provider and bot-signal availability must be verified for the actual
-data path. Do not silently treat these open implementation decisions as proven
+boundaries, access roles, actual region/purpose rules, recognition validation,
+CLI platform derivation and shared/CI permission handling, advertising integration
+details, and deletion propagation. Provider and bot-signal availability must be
+verified for the actual data path. Do not silently treat these open implementation decisions as proven
 capabilities or user commitments.
 
 ## Confirmation

@@ -10,16 +10,19 @@ shutdown, and CI. Collection, workspace isolation, authentication, MCP, reports,
 and background jobs are subsequent packages in the [plan](docs/plans/analytics-service.md).
 No live analytics data is collected by this foundation.
 
-## Architecture decisions
+## Product and architecture decisions
 
 The accepted target is a Rust backend using Axum, Tokio, SQLx, and the official
 Rust MCP SDK. Browser code remains TypeScript. The current implementation is
 still the TypeScript Package 1 foundation; its Rust port is the next backend
 step. The commands below describe that existing foundation.
 
-Read the [ADR index](docs/adr/README.md) for current decisions and the
-[living ADR convention](docs/adr/0002-living-architecture-decisions.md) before
-changing architecture. ADRs and all other repository work use US English.
+Read the [ADR index](docs/adr/README.md) for current decisions, starting with
+[feature scope and priorities](docs/adr/0004-product-scope-and-priorities.md).
+The records also cover observation design, privacy/recognition, data lifecycle,
+reporting/access, and advertising. Follow the
+[living ADR convention](docs/adr/0002-living-architecture-decisions.md) when
+changing product or architecture decisions. All repository work uses US English.
 
 ## Run locally
 

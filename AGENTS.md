@@ -11,12 +11,15 @@
 - Never provide migration credentials to the application or log secret values.
 - Migration files are immutable after application; add a numbered SQL file.
 
-## Architecture decisions
+## Product and architecture decisions
 
 - Read [the ADR index](docs/adr/README.md) and relevant accepted records before
-  architecture work. Follow [the living ADR convention](docs/adr/0002-living-architecture-decisions.md).
+  product-scope, policy, or architecture work. Follow
+  [the living ADR convention](docs/adr/0002-living-architecture-decisions.md).
 - Update an existing topic in place when the task changes its decision; keep
   its filename stable, preserve `Date`, and update `Updated`, `Change note`,
   and the index as required.
+- Use [ADR 0004](docs/adr/0004-product-scope-and-priorities.md) for feature scope
+  and priorities; read the linked product decisions for the affected behavior.
 - Keep requirements, the implementation plan, and implementation-status notes
   consistent with the decision. Keep unresolved choices explicit.
