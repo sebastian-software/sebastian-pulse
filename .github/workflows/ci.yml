@@ -15,26 +15,37 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.1.0
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
+      - name: Install Rust 1.97.1
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal --component rustfmt --component clippy
+          rustup default 1.97.1
+      - run: scripts/check.sh
+      - name: Install SQLx CLI 0.9.0
+        run: cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres,rustls
       - name: Start disposable PostgreSQL
         run: docker compose up -d --wait postgres
-      - run: pnpm test:integration
+      - name: Apply migrations with the migration credential
+        run: cargo run --locked -- migrate
+        env:
+          APP_ENV: local
+          DATABASE_TLS: disable
+          DATABASE_MIGRATION_URL: postgresql://analytics_migrator:local-migration-only@127.0.0.1:55432/analytics
+      - name: Check committed SQLx metadata
+        run: cargo sqlx prepare --check -- --locked --all-targets --features integration-tests
+        env:
+          DATABASE_URL: postgresql://analytics_app:local-runtime-only@127.0.0.1:55432/analytics
+      - name: Run real PostgreSQL integration tests
+        run: scripts/test-integration.sh
         env:
           TEST_DATABASE_ADMIN_URL: postgresql://postgres:local-admin-only@127.0.0.1:55432/postgres
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-      - name: Build the Bunny-compatible image
+      - name: Build the tested linux/amd64 image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
@@ -44,7 +55,8 @@ jobs:
           build-args: RELEASE_ID=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - run: pnpm test:container
+      - name: Exercise the exact tested image
+        run: scripts/test-container.sh
         env:
           ANALYTICS_IMAGE: analytics-service:ci
       - name: Log in to GHCR

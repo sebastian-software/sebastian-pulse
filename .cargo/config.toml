@@ -1,0 +1,3 @@
+[env]
+# Normal builds use committed query metadata, never runtime database credentials.
+SQLX_OFFLINE = "true"

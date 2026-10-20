@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Select Rust for the entire backend; the TypeScript foundation still needs a port.
+- Change note: Port the foundation to Rust, preserving the existing SQL ledger and adding offline query checks.
 
 ## Context
 
@@ -18,10 +18,10 @@ processing core. Experience with lower Rust HTTP response times informs this
 choice; no representative Rust-versus-TypeScript benchmark has been run for
 this service, and the forecast alone does not establish a TypeScript bottleneck.
 
-The repository currently contains a working TypeScript foundation for container
-startup, PostgreSQL roles and migrations, health checks, shutdown, and CI. It
-contains no collection, authentication, MCP, or report implementation. Changing
-languages now has a smaller migration scope than after those capabilities exist.
+At the language decision, the repository contained only a TypeScript foundation
+for startup, migrations, health checks, shutdown, and CI. That foundation is now
+ported to Rust. Collection, authentication, MCP, and reports remain later work.
+Changing languages before those capabilities existed kept the migration bounded.
 
 ## Decision
 
@@ -64,10 +64,10 @@ One backend language keeps collection, analysis, and permissions in the same
 application. Rust offers explicit ownership and concurrency controls, while
 SQL remains suitable for analytics and portable PostgreSQL operations.
 
-The existing foundation must be ported, including its migration-history contract,
-credential separation, TLS verification, timeouts, readiness, shutdown, and CI
-checks. Do not claim the Rust port is complete or silently replace applied SQL
-migration history. Browser/backend types need an explicit shared contract, and
+The port preserves the foundation's migration-history contract, credential
+separation, TLS verification, database/probe timeouts, readiness, shutdown, and
+CI checks. Applied SQL files and `analytics.schema_migrations` remain unchanged;
+SQLx's migration ledger is not introduced. Browser/backend types need an explicit shared contract, and
 auth and provider integrations need Rust-compatible implementation choices.
 
 Retaining TypeScript was viable and would preserve the current foundation.
@@ -77,9 +77,11 @@ team-language advantage. Neither alternative is selected.
 
 ## Validation and review triggers
 
-First port the foundation and retain its real PostgreSQL and container failure
-checks. Then exercise validation, deduplication, and commit-before-success on
-the complete collection path. Measure latency percentiles, CPU, memory, and
+The foundation retains real PostgreSQL and container failure checks. SQLx
+metadata is checked against a disposable migrated schema, and normal builds are
+offline. The Rust migrator also accepts the existing TypeScript ledger without
+reapplying migrations. Next exercise validation, deduplication, and
+commit-before-success when implementing collection. Measure latency percentiles, CPU, memory, and
 database pressure with representative batches and concurrent queries. No
 specific speedup, cost saving, or future capacity is asserted by this ADR.
 

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO analytics.schema_migrations (version, checksum) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "089e980d1de239b8b78fddc5b7c1873b50697fc810f0c0a6cb50ae31856fd154"
+}

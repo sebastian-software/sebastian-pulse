@@ -1,118 +1,140 @@
 # Analytics service
 
-A portable foundation for the analytics service described in the
+A Rust foundation for the analytics service described in the
 [product brief](docs/discovery/analytics-service-brief.md). The initial deployment
 target is Bunny Magic Containers with PlanetScale Postgres **PS-10 ARM, single
 node, Frankfurt**. The application uses standard HTTP and PostgreSQL protocols.
 
-Package 1 provides container boot, database roles, SQL migrations, health checks,
-shutdown, and CI. Collection, workspace isolation, authentication, MCP, reports,
-and background jobs are subsequent packages in the [plan](docs/plans/analytics-service.md).
-No live analytics data is collected by this foundation.
+The foundation implements container boot, restricted database roles, SQL
+migrations, health checks, shutdown, and CI with Axum, Tokio, and SQLx. Collection,
+workspace isolation, authentication, MCP, reports, and background jobs remain
+subsequent packages in the [plan](docs/plans/analytics-service.md). No live
+analytics data is collected by this foundation.
 
 ## Product and architecture decisions
 
-The accepted target is a Rust backend using Axum, Tokio, SQLx, and the official
-Rust MCP SDK. Browser code remains TypeScript. The current implementation is
-still the TypeScript Package 1 foundation; its Rust port is the next backend
-step. The commands below describe that existing foundation.
-
-Read the [ADR index](docs/adr/README.md) for current decisions, starting with
+Read the [ADR index](docs/adr/README.md), starting with
 [feature scope and priorities](docs/adr/0004-product-scope-and-priorities.md).
-The records also cover observation design, privacy/recognition, data lifecycle,
-reporting/access, and advertising. Follow the
-[living ADR convention](docs/adr/0002-living-architecture-decisions.md) when
-changing product or architecture decisions. All repository work uses US English.
+The records cover the Rust backend, observation design, privacy/recognition,
+data lifecycle, reporting/access, and advertising. Follow the
+[living ADR convention](docs/adr/0002-living-architecture-decisions.md) when a
+decision changes. All repository work uses US English. Future browser SDK and
+UI code remain TypeScript; the backend no longer needs Node or pnpm.
 
 ## Run locally
 
-Install Node **24.22.0**, pnpm **11.25.0**, and Docker with its Compose plugin.
-PostgreSQL **18.6** runs in Compose; no host PostgreSQL installation is needed.
+Install Docker with its Compose plugin. For host development and verification,
+install Rustup; `rust-toolchain.toml` pins Rust **1.97.1**, Rustfmt, and Clippy.
+Compose runs pinned PostgreSQL **18.6** without a host PostgreSQL installation.
 
 ```sh
-pnpm install --frozen-lockfile
 docker compose up --build --wait
-pnpm smoke
+docker compose exec -T app analytics-service smoke
 ```
 
-The API listens at `http://127.0.0.1:3000`. The database listens only on
-`127.0.0.1:55432`; local credentials in `compose.yaml` are disposable fixtures.
-Compose initializes restricted roles, runs a one-shot migrator, and starts the
-application only after migration success. The app has no migration credential.
-The same image runs both processes with different commands and credentials.
+The API listens at `http://127.0.0.1:3000`; PostgreSQL is bound to
+`127.0.0.1:55432`. Local credentials in `compose.yaml` are disposable fixtures.
+Compose initializes restricted roles, runs the one-shot migrator, and starts
+the app after migration success. The same image runs both commands with
+separate credentials; the app receives no migration credential.
 
-To run the application on the host with watch mode instead:
+For host development, start PostgreSQL, migrate, then run the app:
 
 ```sh
-cp .env.example .env
-cp .env.migration.example .env.migration
 docker compose up -d --wait postgres
-pnpm db:migrate
-pnpm dev
+APP_ENV=local DATABASE_TLS=disable \
+  DATABASE_MIGRATION_URL=postgresql://analytics_migrator:local-migration-only@127.0.0.1:55432/analytics \
+  cargo run --locked -- migrate
+APP_ENV=local DATABASE_TLS=disable \
+  DATABASE_URL=postgresql://analytics_app:local-runtime-only@127.0.0.1:55432/analytics \
+  cargo run --locked -- serve
 ```
 
-Do not run both app modes on the same port. Change `APP_PORT` / `POSTGRES_PORT`
-for Compose or `PORT` / database URLs for host development when necessary.
-`docker compose down` keeps database data; adding `--volumes` deletes that local
-database. Bootstrap SQL runs only on a fresh volume.
+Use one app mode per port. Change Compose `APP_PORT` / `POSTGRES_PORT`, or the
+host `PORT` / database URLs, when necessary. The binary reads process environment
+variables and does not load `.env` files automatically; the example files document
+separate runtime, migration, and test settings.
+`docker compose down` retains local data; `--volumes` deletes that local database.
+Bootstrap SQL runs only on a fresh volume.
 
 ## Check the foundation
 
 ```sh
-pnpm check
-cp .env.test.example .env.test
+scripts/check.sh
 docker compose up -d --wait postgres
-pnpm test:integration
-docker compose build
-pnpm test:container
+TEST_DATABASE_ADMIN_URL=postgresql://postgres:local-admin-only@127.0.0.1:55432/postgres \
+  scripts/test-integration.sh
+docker build -t analytics-service:local .
+ANALYTICS_IMAGE=analytics-service:local scripts/test-container.sh
 ```
 
-`check` runs typechecking, focused unit tests, and compilation. Integration tests
-require the disposable **loopback** database administrator URL in `.env.test` and
-create/drop databases with generated names. They verify transactional migration
-rollback, concurrent migration locking, immutable history, restricted runtime
-permissions, synthetic data operations, and HTTP readiness through a database
-outage and recovery. They fail when the database URL is absent; they do not skip.
+`check.sh` runs Rustfmt, Clippy, unit tests, and a locked build using committed
+SQLx metadata. Integration checks create and drop uniquely named databases on
+an explicit loopback administrator connection. They cover atomic migration
+rollback, concurrent migrators, history drift, restricted runtime operations,
+HTTP readiness during outages/recovery, and schema-owner rejection. The dedicated
+command fails when its administrator URL is absent; ordinary unit checks need
+no database. Fixture URLs cannot redirect to another host/database through query
+parameters.
 
-The container test creates its own Compose project and volumes on random host
-ports, checks fresh boot, non-root execution, absence of migration credentials,
-database stop/restart, and SIGTERM exit. It removes only that generated project.
-Set `ANALYTICS_IMAGE` to test an already built image. CI builds `linux/amd64`, runs
-these checks, and publishes the exact tested image to GHCR with its commit SHA.
-Use the recorded image digest for deployment; CI does not deploy to Bunny.
+The container check creates its own Compose project on random ports. It checks
+fresh migration/startup, UID 1000, credential separation, database outage/recovery,
+clean SIGTERM, and sanitized logs, then removes only that generated project.
+CI builds and tests `linux/amd64`, then publishes the exact tested image to GHCR
+on `main` with its commit SHA. CI does not deploy to Bunny.
+
+For an explicit running target:
+
+```sh
+SMOKE_BASE_URL=http://127.0.0.1:3000 scripts/smoke.sh
+```
+
+## SQL query metadata
+
+Normal Cargo and container builds use `.sqlx/` and do not connect to the runtime
+database. After changing checked SQL or schema, apply migrations to the disposable
+local database and regenerate its metadata:
+
+```sh
+cargo install sqlx-cli --version 0.9.0 --no-default-features --features postgres,rustls
+DATABASE_URL=postgresql://analytics_migrator:local-migration-only@127.0.0.1:55432/analytics \
+  scripts/prepare-sqlx.sh
+DATABASE_URL=postgresql://analytics_app:local-runtime-only@127.0.0.1:55432/analytics \
+  cargo sqlx prepare --check -- --locked --all-targets --features integration-tests
+```
+
+Commit query metadata with the SQL/schema change. The custom migrator preserves
+`analytics.schema_migrations`; it does not use SQLx's different migration ledger.
 
 ## Runtime contract
 
 | Setting | Contract |
 | --- | --- |
-| `DATABASE_URL` | Required PostgreSQL runtime login. No inline SSL options; no schema ownership or RLS bypass. |
-| `DATABASE_TLS` | `verify-full` by default. `disable` requires explicit `APP_ENV=local` or `test`. |
-| `DATABASE_CA_CERT` | Optional PEM CA for a host whose CA is not in the system trust store. Verification stays enabled. |
-| `PORT` | HTTP port, default `3000`; binds to `0.0.0.0` inside the container. |
-| `RELEASE_ID` | Safe release identifier, default `local`; set to the commit SHA at image build time. |
-| `DATABASE_MIGRATION_URL` | **Migrator only.** The application refuses to start if this is present. |
+| `DATABASE_URL` | Required runtime PostgreSQL login without schema ownership or RLS bypass. |
+| `DATABASE_TLS` | `verify-full` by default; `disable` requires explicit `APP_ENV=local` or `test`. Inline URL SSL options are rejected. |
+| `DATABASE_CA_CERT` | Optional PEM CA; certificate and hostname verification remain enabled. |
+| `PORT` | HTTP port, default `3000`; binds to `0.0.0.0` in the container. |
+| `RELEASE_ID` | Safe release identifier, default `local`; CI sets the commit SHA at image build. |
+| `DATABASE_MIGRATION_URL` | Migrator only. The app refuses startup when it is present. |
+| `MIGRATIONS_DIR` | Optional explicit migration directory; the image includes `/app/migrations`. |
 
-The runtime has a pool of at most five connections, a two-second connection
-acquisition timeout, two-second server statement timeout, and three-second driver
-query timeout. Idle connection failures are handled without logging credentials
-or driver messages. Requests are not automatically replayed; a later request can
-open a new connection after recovery. There is no hidden retry of data writes.
+The pool has at most five connections, a two-second acquire timeout, 30-second
+idle timeout, and five-minute maximum lifetime. Runtime statements have a
+two-second server timeout and idle transactions have a five-second timeout.
+Readiness probes have a three-second deadline and overlapping probes share one
+check. Writes are not automatically replayed. SQL statements and raw driver
+errors are not logged.
 
-`GET /health/live` checks the process; `GET /health/ready` also checks PostgreSQL
-18, the complete migration checksums, and restricted role permissions. Both return
-the release ID and disable caching. Readiness returns `503` on database/schema/
-role failures. Concurrent readiness requests share one database probe.
-`SIGTERM` stops new work, drains HTTP, and closes the pool within a 20-second
-deadline. Other routes return `404`.
+`GET /health/live` checks the process. `GET /health/ready` additionally verifies
+PostgreSQL 18, the complete migration history/checksums, and restricted runtime
+permissions; it returns `503` on failure. Both include the release ID and disable
+caching. Other routes return JSON `404`. SIGTERM/SIGINT stop new work, drain HTTP,
+and close the pool within a 20-second deadline.
 
-## Migrations and the deployment target
+## Database and deployment
 
-Read [database operations](ops/database.md) before adding SQL or configuring a
-remote database. Read [Bunny deployment](ops/bunny/README.md) for the target
-container settings and outstanding live-environment checks.
-
-PostgreSQL 18 is the selected local compatibility baseline. Before provisioning
-PS-10, confirm its supported major and match it here if necessary. No database
-subscription, production secret, or Bunny application is created by this package.
-The actual Bunny-to-PlanetScale TLS/permission path and full provider exit rehearsal
-remain release gates before live collection.
+Read [database operations](ops/database.md) for schema history and credentials,
+and [Bunny deployment](ops/bunny/README.md) for target settings and remaining
+live checks. Before provisioning PS-10, verify its PostgreSQL major and actual
+role/TLS behavior. Provider provisioning and the full export/restore rehearsal
+remain gates before live collection.

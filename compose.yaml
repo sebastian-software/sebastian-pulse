@@ -23,7 +23,7 @@ services:
       context: .
       args:
         RELEASE_ID: ${RELEASE_ID:-local}
-    command: ["node", "dist/migrate.js"]
+    command: ["migrate"]
     environment:
       APP_ENV: local
       DATABASE_TLS: disable
@@ -32,6 +32,9 @@ services:
       postgres:
         condition: service_healthy
     restart: "no"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
     healthcheck:
       disable: true
 
@@ -45,6 +48,7 @@ services:
       APP_ENV: local
       DATABASE_TLS: disable
       DATABASE_URL: postgresql://analytics_app:local-runtime-only@postgres:5432/analytics
+      PORT: "3000"
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     depends_on:

@@ -1,26 +1,30 @@
 # syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
-FROM node:24.22.0-bookworm-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS build
+FROM rust:1.97.1-bookworm@sha256:0e2bcaef56d041a486784e54104a81aebe0da44bd03019bd70bc0401e42e4a97 AS builder
 WORKDIR /app
-RUN npm install --global pnpm@11.25.0
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-COPY tsconfig*.json ./
+ENV SQLX_OFFLINE=true
+COPY Cargo.toml Cargo.lock ./
+COPY .sqlx ./.sqlx
+COPY migrations ./migrations
 COPY src ./src
-RUN pnpm build && pnpm prune --prod
+# Cargo validates declared test target paths even for a binary-only build.
+COPY tests ./tests
+RUN cargo build --locked --release --bin analytics-service
 
-FROM node:24.22.0-bookworm-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS runtime
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS runtime
 ARG RELEASE_ID=local
-ENV NODE_ENV=production PORT=3000 RELEASE_ID=${RELEASE_ID}
+ENV PORT=3000 RELEASE_ID=${RELEASE_ID}
 LABEL org.opencontainers.image.source="https://github.com/sebastian-software/analytics-service"
 LABEL org.opencontainers.image.revision="${RELEASE_ID}"
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=build --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/dist ./dist
-COPY --chown=node:node package.json ./
-COPY --chown=node:node migrations ./migrations
-USER node
+COPY --from=builder /app/target/release/analytics-service /usr/local/bin/analytics-service
+COPY --chown=1000:1000 migrations ./migrations
+USER 1000:1000
 EXPOSE 3000
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["node", "--input-type=module", "-e", "const r = await fetch('http://127.0.0.1:' + process.env.PORT + '/health/ready', {signal: AbortSignal.timeout(4000)}); process.exit(r.ok ? 0 : 1)"]
-CMD ["node", "dist/main.js"]
+  CMD ["analytics-service", "healthcheck"]
+ENTRYPOINT ["analytics-service"]
+CMD ["serve"]

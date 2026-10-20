@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Adopt the living ADR format; the deployment direction is unchanged.
+- Change note: Implement the local Rust foundation; live provider validation remains pending.
 
 ## Context
 
@@ -33,7 +33,7 @@ provider compatibility or make cutovers interruption-free.
 
 ## Validation and review triggers
 
-A local TypeScript foundation exists; the Rust port and live deployment remain
-pending. Verify the same application image against ordinary PostgreSQL and the
-actual target, and rehearse export/restore before live collection. Revisit the
+The local foundation is implemented in Rust. Live provider deployment and the
+full export/restore rehearsal remain pending. Verify the same application image
+against ordinary PostgreSQL and the actual target before live collection. Revisit the
 boundary when measured workload or operational requirements justify a split.
