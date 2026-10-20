@@ -237,8 +237,8 @@ minimal audit records. Project deletion records each deleted goal. The restricte
 runtime cannot provision identities/workspaces/memberships or edit audit records.
 Operator bootstrap is separate; there is no public configuration transport yet.
 
-Local evidence: 17 unit cases and 15 real-PostgreSQL integration cases (six foundation,
-nine workspace) pass, including raw RLS, cross-workspace operations, reused pooled
+Local evidence: 17 unit cases and 16 real-PostgreSQL integration cases (six foundation,
+ten workspace) pass, including raw RLS, cross-workspace operations, reused pooled
 connections after failure/cancellation, revoked membership, concurrent writers,
 and failed-audit rollback. SQLx metadata covers the static configuration queries.
 This does not establish HTTP/MCP auth, verified recipients, invites, report-link

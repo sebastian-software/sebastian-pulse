@@ -174,7 +174,7 @@ impl WorkspaceStore {
         input: NewProject,
     ) -> Result<Project> {
         input.validate()?;
-        check_expected_version(expected_version)?;
+        check_update_version(expected_version)?;
         let NewProject { name, kind } = input;
         let mut tx = self.begin_scope(actor, workspace, true).await?;
         let row = sqlx::query_as!(
@@ -347,7 +347,7 @@ impl WorkspaceStore {
         input: NewGoal,
     ) -> Result<Goal> {
         input.validate()?;
-        check_expected_version(expected_version)?;
+        check_update_version(expected_version)?;
         let NewGoal {
             project_id,
             name,
@@ -479,7 +479,7 @@ impl WorkspaceStore {
         input: NewRecipient,
     ) -> Result<Recipient> {
         input.validate()?;
-        check_expected_version(expected_version)?;
+        check_update_version(expected_version)?;
         let NewRecipient { email } = input;
         let mut tx = self.begin_scope(actor, workspace, true).await?;
         let row = sqlx::query_as!(
@@ -642,6 +642,18 @@ impl HasId for Recipient {
     fn id(&self) -> Uuid {
         self.id
     }
+}
+
+fn check_update_version(version: i32) -> Result<()> {
+    check_expected_version(version)?;
+    // Reserve the final integer revision for a deletion audit. An update must
+    // never leave a live row that cannot later be deleted through these operations.
+    if version == i32::MAX - 1 {
+        return Err(WorkspaceError::InvalidInput(
+            "version cannot be incremented further",
+        ));
+    }
+    Ok(())
 }
 
 fn check_expected_version(version: i32) -> Result<()> {
