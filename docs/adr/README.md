@@ -10,14 +10,14 @@ deployment is complete.
 | --- | --- | --- | --- |
 | 0001 | [Portable container and PostgreSQL](0001-portable-container-and-postgres.md) | accepted | Local Rust foundation exists; live deployment pending. |
 | 0002 | [Living decision records](0002-living-architecture-decisions.md) | accepted | This index, template, and repository instructions establish the convention. |
-| 0003 | [Rust backend](0003-rust-backend.md) | accepted | Rust foundation and configuration persistence exist; auth/collection pending. |
+| 0003 | [Rust backend](0003-rust-backend.md) | accepted | Rust foundation and configuration/auth/MCP exist; collection and live deployment pending. |
 | 0004 | [Product scope and priorities](0004-product-scope-and-priorities.md) | accepted | P1/P2/P3 scope agreed; configuration persistence exists, other product features pending. |
 | 0005 | [Structured observations](0005-structured-observations.md) | accepted | Website/CLI collection and traffic classification pending. |
 | 0006 | [Privacy, consent, and recognition](0006-privacy-consent-and-recognition.md) | accepted | Product boundaries agreed; concrete policy and methods need validation before use. |
-| 0007 | [Data lifecycle and evidence](0007-data-lifecycle-and-evidence.md) | accepted | Retention, correction, deletion, and restore behavior pending. |
-| 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration operations and tenant RLS exist; login, reports, MCP, and admin pending. |
+| 0007 | [Data lifecycle and evidence](0007-data-lifecycle-and-evidence.md) | accepted | Local auth expiry/cleanup implemented; analytics retention, corrections, and restore proof pending. |
+| 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration HTTP/MCP and OIDC sessions exist; reports, admin UI, and live auth pending. |
 | 0009 | [Advertising measurement](0009-advertising-measurement.md) | accepted | Attribution, provider access, and reporting integrations pending; exports remain P2. |
-| 0010 | [External identity and workspace grants](0010-external-identity-and-workspace-grants.md) | accepted | Configuration/RLS implemented; managed or separate IdP allowed, provider and auth integration pending. |
+| 0010 | [External identity and workspace grants](0010-external-identity-and-workspace-grants.md) | accepted | Standard OIDC/OAuth and local grants implemented; EU Rauthy deployment validation pending. |
 
 Follow [ADR 0002](0002-living-architecture-decisions.md) when creating or updating
 a record. Start with the [template](template.md), assign the next unused

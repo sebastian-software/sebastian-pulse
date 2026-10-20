@@ -91,8 +91,14 @@ async fn serve(env: &HashMap<String, String>) -> Result<(), ()> {
     let listener = TcpListener::bind((std::net::Ipv4Addr::UNSPECIFIED, config.port))
         .await
         .map_err(|_| log::event("server_failed", json!({"code":"BIND"})))?;
+    let auth = analytics_service::auth::AuthConfig::from_env(env)
+        .map_err(|error| log::event("startup_failed", json!({"reason":error.to_string()})))?
+        .map(|config| analytics_service::auth::AuthService::new(pool.clone(), config))
+        .transpose()
+        .map_err(|_| log::event("startup_failed", json!({"code":"AUTH_CONFIGURATION"})))?;
+    let auth_cleanup = auth.as_ref().map(|auth| auth.start_cleanup());
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-    let server = axum::serve(listener, service.router())
+    let server = axum::serve(listener, service.router_with_auth(auth))
         .with_graceful_shutdown(async {
             let _ = shutdown_rx.await;
         })
@@ -104,12 +110,14 @@ async fn serve(env: &HashMap<String, String>) -> Result<(), ()> {
     );
     tokio::select! {
         result = &mut server => {
+            if let Some(task) = &auth_cleanup { task.abort(); }
             let _ = result;
             log::event("server_failed", json!({"code":"SERVER"}));
             let _ = timeout(Duration::from_secs(20), pool.close()).await;
             Err(())
         }
         result = shutdown_signal() => {
+            if let Some(task) = &auth_cleanup { task.abort(); }
             result.map_err(|_| log::event("shutdown_failed", json!({"code":"SIGNAL"})))?;
             service.drain();
             log::event("shutdown_started", json!({}));

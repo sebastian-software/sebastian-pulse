@@ -30,4 +30,4 @@ if [[ "$database_path" != postgres ]]; then
   exit 2
 fi
 
-exec cargo test --locked --features integration-tests --test foundation --test workspaces -- --test-threads=1
+exec cargo test --locked --features integration-tests --test foundation --test workspaces --test auth_store --test authentication -- --test-threads=1

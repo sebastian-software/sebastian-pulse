@@ -1,0 +1,8 @@
+[
+  {
+    "name": "mcp:read"
+  },
+  {
+    "name": "mcp:write"
+  }
+]

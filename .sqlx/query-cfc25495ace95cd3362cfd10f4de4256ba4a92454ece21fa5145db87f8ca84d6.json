@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM analytics.browser_login_attempts\n            WHERE state_hash = $1\n              AND binding_hash = $2\n              AND expires_at > clock_timestamp()\n            RETURNING pkce_verifier, nonce\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pkce_verifier",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.browser_login_attempts",
+            "name": "pkce_verifier"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "nonce",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.browser_login_attempts",
+            "name": "nonce"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "cfc25495ace95cd3362cfd10f4de4256ba4a92454ece21fa5145db87f8ca84d6"
+}

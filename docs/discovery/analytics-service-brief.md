@@ -125,8 +125,9 @@ contracts, and a verified export path. Preserve existing public OSS Metrics
 contracts; the analytics service has its own repository and runtime.
 
 A separate maintained identity provider, including managed identity, is allowed
-under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). Provider
-selection, login/MCP compatibility, identity export, and auth data location still
+under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). EU-operated identity is now the deployment requirement; self-hosted Rauthy is the
+validation candidate behind a standard OIDC/OAuth boundary. Live login/MCP
+compatibility, identity export/restore, and all auth processing locations still
 need validation. The next design pass must also resolve live database
 compatibility, durable scheduled work, collection peaks and event volume, cost
 boundaries, access roles, actual region/purpose rules, recognition validation,
@@ -141,5 +142,6 @@ The product-level scope is confirmed. The technical assessment evaluates the
 preferred shape and alternatives against this brief, including the smaller launch
 workload, operating costs, portability, and remaining feasibility gaps.
 The local Rust Package 1 foundation is implemented. Live provider provisioning
-and authentication, transports, collection, and reporting remain subsequent work; accepted product
-scope is not implementation evidence.
+remains pending. Optional OIDC sessions and configuration HTTP/MCP transports
+are implemented; invitations, report access, collection, and reporting remain
+subsequent work. Accepted product scope is not implementation evidence.

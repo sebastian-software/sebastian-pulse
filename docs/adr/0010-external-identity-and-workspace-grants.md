@@ -3,85 +3,137 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Allow a separate, including managed, identity provider and implement the domain-owned configuration boundary.
+- Change note: Make EU-operated identity the deployment direction, validate self-hosted Rauthy, and implement a replaceable OIDC/OAuth boundary.
 
 ## Context
 
-Verified browser login and MCP authorization require an identity service and an
-OAuth authorization server. Rust client/session libraries do not supply that
-complete service. Implementing an authorization server would add security and
-maintenance responsibilities outside this product's purpose.
-
-The analytics application remains one Rust service. A separate identity provider
-is acceptable, including a managed provider that removes identity-service
-operations from this application. Provider selection and deployment are still
-open; WorkOS and Better Auth are candidates to assess, not configured services.
+Browser login and internal MCP require an identity provider and OAuth authorization
+server. Building one is outside this product's purpose. Identity processing in the
+United States is a material adoption barrier, including when contractual transfer
+safeguards are available. WorkOS AuthKit/Connect was assessed as a managed option
+without a custom login domain; its public terms include US processing and do not
+establish EU-only identity residency. See the [privacy and exit assessment](../discovery/workos-privacy-and-exit.md).
 
 ## Decision
 
-Delegate identity verification and OAuth authorization-server behavior to a
-maintained integration. Do not implement a custom authorization server. Allow
-its process, hosting, and implementation language to differ from analytics.
-Prefer standard OIDC/OAuth integration with an owned public issuer domain where
-supported. A managed provider's identity state need not be in our PostgreSQL
-database; document its export and migration limits before selecting it.
+Keep the analytics application in Rust and delegate authentication and OAuth
+issuance to a maintained separate provider. Prioritize self-hosted **Rauthy** on
+Bunny in one EU region, with PostgreSQL and persistent cache storage. This is a
+deployment candidate requiring a real client smoke test, target-platform proof,
+and operating/processing terms; it is not an already deployed service. Do not
+provision WorkOS while this EU-operated direction is being validated. A managed
+EU alternative remains possible through the same boundary.
 
-Keep analytics identities and permissions in application-owned PostgreSQL tables.
-Bind provider identities by the exact issuer and subject, not by an unverified
-email address. Identity-provider groups or a successful login alone do not grant
-workspace or report access. Verify email ownership before granting named-recipient
-report access. Workspace grants and report-recipient grants remain distinct.
+Use standard OIDC authorization code with PKCE S256 for browser login and standard
+OAuth discovery/JWKS and resource-bound JWTs for MCP. The adapter contains no
+WorkOS/Rauthy user API, organization model, or vendor SDK. Initial compatibility
+uses same-origin provider endpoints, RS256 signatures, exact configured issuer
+(including its path/trailing slash), and standard string/array audience claims.
+A future provider must satisfy this profile or supply a small boundary adapter.
+Do not implement a custom authorization server.
 
-Use workspace `admin` and `reader` memberships for internal configuration:
-admins can read and change projects, goals, and recipients; readers can inspect
-them. A recipient record creates no internal membership. Initial principal,
-workspace, and membership provisioning requires a trusted operator connection;
-the runtime cannot create or elevate those grants. Authenticated invitations and
-membership administration remain subsequent work.
+Use an owned, stable public identity domain for self-hosting, plus independently
+owned analytics/MCP/report URLs. Provider relocation behind the same issuer can
+preserve the public protocol; replacing the issuer requires fresh authentication.
+Passkeys are tied to their relying-party domain; no lossless credential/session
+migration is promised. Vendor-neutral protocols reduce application changes,
+not the need to verify a new provider's behavior.
 
-Every configuration operation applies application permissions and transaction-local
-actor/workspace context. PostgreSQL RLS checks membership and write permission
-again using a restricted, non-owner runtime role. This boundary trusts the backend
-to assert the verified actor; it does not protect against stolen runtime database
-credentials. Never accept an actor UUID from an unverified HTTP or MCP request.
+### Application identity and permissions
 
-Version configuration changes and reject stale mutations. Commit each mutation
-with its audit records, including goals deleted with a project. Audit identifiers,
-action, revision, actor, and time; omit configuration contents and recipient email
-from audit payloads. Establish administrative-audit retention before exposing it
-as a live capability under [ADR 0007](0007-data-lifecycle-and-evidence.md).
+Keep principal UUIDs, workspace memberships, recipient configuration, and audit
+in application-owned PostgreSQL. Link exact `(issuer, subject)` identities to a
+principal through a trusted operator connection. Never automatically merge users
+by email or import provider organization roles as analytics permissions. A second
+provider identity can map to the same principal during an explicit migration;
+disabling/removing the old link revokes its local access. The runtime cannot
+create principals, identity links, workspaces, or membership grants.
 
-MCP resource/audience validation, separate read/write scopes, and application-owned
-workspace grants are independent checks. Browser and MCP adapters must call the
-same configuration operations. No public configuration routes are enabled by the
-initial persistence implementation.
+Workspace admins can change configuration; readers can inspect it. Recipient
+configuration grants no internal access. Invites, named-recipient report grants,
+and recipient email changes remain later W2/report work. Requiring a verified
+email for the current internal browser login does not implement report access.
 
-## Consequences
+Each configuration operation checks membership and sets transaction-local
+actor/workspace context. PostgreSQL RLS checks again with a restricted runtime
+role. This trusts the backend's verified actor assertion and does not protect
+against stolen database credentials. HTTP/MCP input never selects the actor.
+Version conflicts and minimal audit records are atomic with each mutation.
 
-Analytics hosting and data remain portable without coupling workspace permissions
-to a vendor's organization model. External identity introduces a separate
-availability dependency and an identity migration path. Managed identity can
-remove service operations but may restrict issuer domains, data location, export,
-or pricing; self-hosting keeps those responsibilities with the operator.
+### Browser and MCP credentials
 
-## Validation and review triggers
+Browser login uses one-use, browser-bound state and nonce, PKCE, signature,
+issuer/audience/expiry validation, and subject-matched userinfo with verified
+email. Store opaque session-token hashes, not provider access/refresh tokens.
+Use host-only HttpOnly SameSite=Lax cookies (Secure in HTTPS deployments), a
+30-minute absolute session lifetime, and Origin plus CSRF checks for mutations
+and logout. Logout removes the local credential; it does not sign out of the
+provider or invalidate every provider-issued token. Recheck the identity link
+and workspace grants on requests. Expired authentication state is denied even
+when cleanup or the provider is unavailable.
 
-The configuration slice checks denied cross-workspace access, restricted database
-grants, pooled-connection cleanup, revocation, concurrency, and audit rollback
-against PostgreSQL. Authentication, browser/admin routes, MCP authorization,
-forwarded-report links, and identity export/restore are not implemented by it.
+MCP uses the official Rust SDK's stateless Streamable HTTP transport. Verify the
+bearer on every request: fixed trusted issuer/JWKS, signature, exact resource
+audience, expiration/not-before, required `mcp:read`, and optional `mcp:write`.
+Writes also require a current local admin membership. Cookies cannot substitute
+for an MCP bearer token. Validate canonical Host and any present Origin. Serve
+RFC 9728 protected-resource metadata and a discovery challenge, not a local token
+endpoint. Pin separate public read/read-write clients with S256 and configured
+scopes; leave dynamic registration disabled initially. Tool arguments are bounded
+configuration operations, never arbitrary SQL.
 
-Before shipping login, test the selected provider and actual intended MCP client,
-including exact resource audience, issuer/signature/expiry, scopes, unverified
-email, absent/revoked application grants, session lifecycle, and client-registration
-policy. Verify an identity export/restore or document the provider's migration
-limitation. Check auth-region/DPA requirements and costs before provisioning.
+Cache discovery/keys for five minutes; coalesce refreshes and impose a ten-second
+cooldown including failed requests. Unknown signing keys fail closed during the
+cooldown. Expired cache entries require successful discovery; a provider outage
+can therefore deny otherwise unexpired credentials after five minutes. This is
+a deliberate bounded-key policy, not offline or immediate provider-revocation
+support. Keep issued MCP access tokens short-lived; provider account disabling
+and external refresh-token revocation need their own operating checks.
+
+### Lifecycle and replacement
+
+Authentication attempts expire after ten minutes and are capped at 1,000 live
+attempts. The runtime cleans expired attempts/sessions on startup and every
+minute, and denies expired rows independently of cleanup. Backups/restores must
+reapply stored deadlines. Identity links remain until operator unlink/account
+deletion; they are the minimal access-control association. Set provider audit,
+account-deletion, backup, and configuration-audit retention before live release
+under [ADR 0007](0007-data-lifecycle-and-evidence.md).
+
+To replace the provider, restore application IDs/grants first, configure and test
+the new issuer and clients, and explicitly link the new verified identity to the
+existing principal using operator-controlled evidence or dual authentication.
+Do not use matching email alone as migration authority. Allow a bounded transition
+with separate links, then disable the old link/issuer and revoke old credentials.
+Keep rollback mappings until the transition is verified. Rehearse this process
+before a provider contract renewal and no later than the third operating year.
+
+## Validation and remaining release gates
+
+Tests exercise PostgreSQL role restrictions, one-use state, session revocation,
+HTTP CSRF and tenant isolation, MCP signature/issuer/resource/scope checks, local
+role revocation, signing-key rotation/cooldown, and replacement by a second OIDC
+issuer without changing principal UUIDs or workspace grants. Protocol fixtures
+are local test infrastructure, not an alternative production authorization server.
+Actual Rauthy/Codex evidence and commands belong in the [operating guide](../../ops/rauthy/README.md).
+
+Rauthy's current resource-indicator documentation excludes upstream-brokered
+social login from processing the resource parameter. Do not claim that path works
+for MCP without a separate proof, and never relax audience validation to make it
+pass. Local password/passkey authentication is the initial proof path.
+
+Before live release, verify the deployed provider and intended client, login and
+recovery/verified-email delivery, provider revocation, report-link/recipient
+protection, rate limits, backups plus keys and restoration, actual EU placement,
+and applicable processor/subprocessor terms. An EU runtime location alone does
+not prove that support, email, backups, or every subprocessor stays in the EU.
 
 ## References
 
-- [Rust backend](0003-rust-backend.md)
 - [Reporting and access](0008-proactive-reports-and-internal-mcp.md)
 - [Implementation plan](../plans/analytics-service.md)
 - [Auth integration assessment](../discovery/auth-integration-assessment.md)
+- [Rauthy resource indicators](https://sebadob.github.io/rauthy/work/resource_indicators.html)
+- [Rauthy persistent cache](https://sebadob.github.io/rauthy/config/ha.html)
 - [OIDC subject and standard claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims)
 - [OAuth resource indicators](https://www.rfc-editor.org/rfc/rfc8707.html)

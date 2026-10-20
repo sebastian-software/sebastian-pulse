@@ -1,0 +1,54 @@
+# Local-only Rauthy configuration. Production must use TLS and a managed secret source.
+secrets_file = "/app/secrets.toml"
+
+[cluster]
+node_id = 1
+nodes = ["1 localhost:8100 localhost:8200"]
+data_dir = "/app/data"
+cache_storage_disk = true
+secret_raft = "$SECRETS"
+secret_api = "$SECRETS"
+
+[database]
+hiqlite = false
+pg_host = "postgres"
+pg_port = 5432
+pg_user = "$SECRETS"
+pg_password = "$SECRETS"
+pg_db_name = "rauthy"
+pg_tls = "disable"
+pg_tls_no_verify = false
+pg_max_conn = 2
+
+[bootstrap]
+bootstrap_dir = "/app/bootstrap"
+admin_email = "admin@example.invalid"
+password_plain = "Rauthy-local-admin-password-only-2026"
+
+[email]
+smtp_url = "mailpit"
+smtp_port = 1025
+smtp_tls_mode = "danger-insecure"
+smtp_from = "Rauthy <auth@example.invalid>"
+
+[server]
+listen_address = "0.0.0.0"
+port_http = 8080
+scheme = "http"
+pub_url = "localhost:8180"
+http_workers = 1
+proxy_mode = false
+
+[user_registration]
+enable = false
+
+[webauthn]
+rp_id = "localhost"
+rp_origin = "http://localhost:8180"
+
+[encryption]
+keys = ["$SECRETS"]
+key_active = "$SECRETS"
+
+[access]
+rfc_8252_enable = true
