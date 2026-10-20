@@ -3,16 +3,16 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 compose_file="$repo_root/compose.yaml"
-project="sebastian-analytics-test-$$-${RANDOM}-${RANDOM}"
+project="sebastian-pulse-test-$$-${RANDOM}-${RANDOM}"
 
-if [[ -z "${ANALYTICS_IMAGE:-}" ]]; then
-  printf '%s\n' 'Set ANALYTICS_IMAGE to the image that this container check should exercise.' >&2
+if [[ -z "${PULSE_IMAGE:-}" ]]; then
+  printf '%s\n' 'Set PULSE_IMAGE to the image that this container check should exercise.' >&2
   exit 2
 fi
 
 export APP_PORT=0
 export POSTGRES_PORT=0
-export ANALYTICS_IMAGE
+export PULSE_IMAGE
 
 compose() {
   docker compose --project-directory "$repo_root" -f "$compose_file" -p "$project" "$@"

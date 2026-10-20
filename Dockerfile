@@ -8,25 +8,25 @@ COPY migrations ./migrations
 COPY src ./src
 # Cargo validates declared test target paths even for a binary-only build.
 COPY tests ./tests
-RUN cargo build --locked --release --bin sebastian-analytics
+RUN cargo build --locked --release --bin sebastian-pulse
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS runtime
 ARG RELEASE_ID=local
 ENV PORT=3000 RELEASE_ID=${RELEASE_ID}
-LABEL org.opencontainers.image.source="https://github.com/sebastian-software/sebastian-analytics"
+LABEL org.opencontainers.image.source="https://github.com/sebastian-software/sebastian-pulse"
 LABEL org.opencontainers.image.revision="${RELEASE_ID}"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=builder /app/target/release/sebastian-analytics /usr/local/bin/sebastian-analytics
+COPY --from=builder /app/target/release/sebastian-pulse /usr/local/bin/sebastian-pulse
 COPY --chown=1000:1000 migrations ./migrations
-COPY LICENSE NOTICE /usr/share/licenses/sebastian-analytics/
+COPY LICENSE NOTICE /usr/share/licenses/sebastian-pulse/
 USER 1000:1000
 EXPOSE 3000
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["sebastian-analytics", "healthcheck"]
-ENTRYPOINT ["sebastian-analytics"]
+  CMD ["sebastian-pulse", "healthcheck"]
+ENTRYPOINT ["sebastian-pulse"]
 CMD ["serve"]

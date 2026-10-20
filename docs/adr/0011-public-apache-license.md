@@ -1,9 +1,9 @@
-# Publish Sebastian Analytics under Apache 2.0
+# Publish Sebastian Pulse under Apache 2.0
 
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Publish the repository and its owned material under Apache-2.0.
+- Change note: Adopt the Sebastian Pulse product and repository name; preserve the accepted service and licensing boundaries.
 
 ## Context
 
@@ -14,7 +14,7 @@ data are separate concerns.
 
 ## Decision
 
-Make `sebastian-software/sebastian-analytics` public. License the repository's owned code, configuration,
+Make `sebastian-software/sebastian-pulse` public. License the repository's owned code, configuration,
 scripts, and documentation under Apache-2.0, with the canonical text in `LICENSE`
 and copyright attribution in `NOTICE`. Referenced dependencies and upstream
 container images keep their own licenses and attribution.

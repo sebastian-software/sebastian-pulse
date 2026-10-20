@@ -2,7 +2,7 @@ use std::{net::SocketAddr, time::Duration};
 
 use axum::Router;
 use reqwest::{Client, Response};
-use sebastian_analytics::{
+use sebastian_pulse::{
     app::Service,
     database::create_pool,
     migrations::{Migration, load_migrations, matches_history, migrate},

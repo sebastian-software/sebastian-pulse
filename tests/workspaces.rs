@@ -1,6 +1,6 @@
 use std::{fmt::Debug, time::Duration};
 
-use sebastian_analytics::{
+use sebastian_pulse::{
     database::create_pool,
     migrations::{load_migrations, migrate},
     workspaces::{NewGoal, NewProject, NewRecipient, ProjectKind, WorkspaceError, WorkspaceStore},

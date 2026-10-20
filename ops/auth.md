@@ -1,6 +1,6 @@
 # Identity integration
 
-Sebastian Analytics owns OIDC login, browser sessions, MCP token validation, and
+Sebastian Pulse owns OIDC login, browser sessions, MCP token validation, and
 its PostgreSQL workspace/report grants. The separate public
 [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
 owns Rauthy configuration, client registration, deployment, upgrades, mail,

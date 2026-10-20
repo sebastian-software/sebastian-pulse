@@ -19,6 +19,7 @@ deployment is complete.
 | 0009 | [Advertising measurement](0009-advertising-measurement.md) | accepted | Attribution, provider access, and reporting integrations pending; exports remain P2. |
 | 0010 | [External identity and workspace grants](0010-external-identity-and-workspace-grants.md) | accepted | OIDC/OAuth and local grants implemented; provider operations moved to sebastian-auth; live validation pending. |
 | 0011 | [Public Apache 2.0 repository](0011-public-apache-license.md) | accepted | Apache-2.0 LICENSE/NOTICE; GitHub visibility and CI are checked at publication. |
+| 0012 | [Sebastian Pulse product name](0012-sebastian-pulse-product-name.md) | accepted | Product, repository, Rust package/binary, image, and Compose names use Pulse; database contracts retain analytics terminology. |
 
 Follow [ADR 0002](0002-living-architecture-decisions.md) when creating or updating
 a record. Start with the [template](template.md), assign the next unused

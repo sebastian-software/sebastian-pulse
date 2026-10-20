@@ -1,9 +1,14 @@
-# Analytics service
+# Sebastian Pulse
 
 Terms shared by the product brief, service contracts, and implementation.
 Counting units describe observations rather than verified distinct people.
 
 ## Language
+
+**Sebastian Pulse**:
+The product that turns permitted website, product, and CLI observations into
+behavior analysis, trend reports, and proactive notifications.
+_Avoid_: Sebastian Analytics, Sebastian Insights
 
 **CLI update check**:
 A recorded request by a CLI to check for an available update. Repeated requests

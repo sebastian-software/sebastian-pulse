@@ -1,4 +1,4 @@
-name: sebastian-analytics
+name: sebastian-pulse
 services:
   postgres:
     image: postgres:18.6-bookworm@sha256:afc7e2d441324c0388fa80c3d24f733b4194a4eb7f47dd8ee2b08eb1a24a647c
@@ -18,7 +18,7 @@ services:
       retries: 20
 
   migrate:
-    image: ${ANALYTICS_IMAGE:-sebastian-analytics:local}
+    image: ${PULSE_IMAGE:-sebastian-pulse:local}
     build:
       context: .
       args:
@@ -39,7 +39,7 @@ services:
       disable: true
 
   app:
-    image: ${ANALYTICS_IMAGE:-sebastian-analytics:local}
+    image: ${PULSE_IMAGE:-sebastian-pulse:local}
     build:
       context: .
       args:

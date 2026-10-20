@@ -8,7 +8,7 @@ use axum::{
 };
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
-use sebastian_analytics::{
+use sebastian_pulse::{
     app::Service,
     auth::{AuthConfig, AuthService},
     config::Environment,
@@ -442,7 +442,7 @@ async fn mcp_checks_tokens_each_request_scopes_local_roles_and_revocation() {
 
 #[tokio::test]
 async fn cached_keys_rotate_and_failed_refreshes_are_rate_limited() {
-    use sebastian_analytics::auth::oidc::OidcProvider;
+    use sebastian_pulse::auth::oidc::OidcProvider;
     let (p, server) = start_provider().await;
     let env = Environment::from([
         ("APP_ENV".into(), "test".into()),

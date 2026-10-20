@@ -9,4 +9,4 @@ if [[ -z "${SMOKE_BASE_URL:-}" ]]; then
   exit 2
 fi
 
-exec cargo run --locked --bin sebastian-analytics -- smoke
+exec cargo run --locked --bin sebastian-pulse -- smoke

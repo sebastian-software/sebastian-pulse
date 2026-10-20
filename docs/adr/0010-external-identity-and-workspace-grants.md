@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Update public repository references while preserving provider and application access boundaries.
+- Change note: Adopt the Sebastian Pulse product and repository name; preserve the accepted service and licensing boundaries.
 
 ## Context
 
@@ -27,7 +27,7 @@ EU alternative remains possible through the same boundary.
 The separate public [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
 owns Rauthy configuration, client registration, independent CI/releases, Bunny
 operations, mail, backups, and provider recovery. This repository is
-`sebastian-analytics` and owns its OIDC adapter, browser sessions, MCP token
+`sebastian-pulse` and owns its OIDC adapter, browser sessions, MCP token
 validation, local identity links, and analytics access grants. Analytics releases
 must not redeploy the identity service. Keep the self-contained protocol tests
 here; the optional real-provider proof uses sebastian-auth's local fixture.
