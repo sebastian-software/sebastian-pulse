@@ -116,10 +116,15 @@ deferred.
 
 ## Technical decisions that follow product confirmation
 
-The selected shape is one Rust backend on Bunny Magic Containers with
-PlanetScale Postgres PS-10 single node in Frankfurt. Browser SDK and interface
-code remain TypeScript. See the [ADR index](../adr/README.md), especially the
-[Rust backend decision](../adr/0003-rust-backend.md). Keep provider switching
+The selected shape is one shared Rust backend and PostgreSQL database for
+multiple customer workspaces, initially on Bunny Magic Containers with
+PlanetScale Postgres PS-10 single node in Frankfurt. Workspace permissions and
+PostgreSQL RLS enforce tenant isolation. Preserve the option of a future dedicated
+customer installation using the same container image and a separate PostgreSQL
+database, as scoped by [ADR 0001](../adr/0001-portable-container-and-postgres.md).
+Dedicated provisioning and operations are outside the initial scope. Browser SDK
+and interface code remain TypeScript. See the [ADR index](../adr/README.md),
+especially the [Rust backend decision](../adr/0003-rust-backend.md). Keep provider switching
 practical through a standard container, conventional Postgres, portable event
 contracts, and a verified export path. Preserve existing public OSS Metrics
 contracts; the analytics service has its own repository and runtime.
