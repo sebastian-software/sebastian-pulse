@@ -10,6 +10,17 @@ shutdown, and CI. Collection, workspace isolation, authentication, MCP, reports,
 and background jobs are subsequent packages in the [plan](docs/plans/analytics-service.md).
 No live analytics data is collected by this foundation.
 
+## Architecture decisions
+
+The accepted target is a Rust backend using Axum, Tokio, SQLx, and the official
+Rust MCP SDK. Browser code remains TypeScript. The current implementation is
+still the TypeScript Package 1 foundation; its Rust port is the next backend
+step. The commands below describe that existing foundation.
+
+Read the [ADR index](docs/adr/README.md) for current decisions and the
+[living ADR convention](docs/adr/0002-living-architecture-decisions.md) before
+changing architecture. ADRs and all other repository work use US English.
+
 ## Run locally
 
 Install Node **24.22.0**, pnpm **11.25.0**, and Docker with its Compose plugin.

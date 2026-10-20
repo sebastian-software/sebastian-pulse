@@ -102,17 +102,17 @@ deferred.
 
 ## Technical decisions that follow product confirmation
 
-The preferred shape is one managed Rust/TypeScript service on Bunny or a similar
-runtime, with PlanetScale storage. The selected starting shape is now one
-container service on Bunny Magic Containers with PlanetScale Postgres PS-10
-single node in Frankfurt. Keep provider switching practical through a standard
-container, conventional Postgres, portable event contracts, and a verified export
+The selected shape is one Rust backend on Bunny Magic Containers with
+PlanetScale Postgres PS-10 single node in Frankfurt. Browser SDK and interface
+code remain TypeScript. See the [ADR index](../adr/README.md), especially the
+[Rust backend decision](../adr/0003-rust-backend.md). Keep provider switching
+practical through a standard container, conventional Postgres, portable event contracts, and a verified export
 path. Preserve existing public OSS Metrics contracts; the analytics
 service has its own repository and runtime.
 
-The next design pass must resolve runtime and database fit, durable scheduled
-work, collection peaks and event volume, cost boundaries, access roles, actual
-region/purpose rules, recognition validation, CLI platform derivation and
+The next design pass must resolve Rust-compatible authentication, live database
+compatibility, durable scheduled work, collection peaks and event volume, cost
+boundaries, access roles, actual region/purpose rules, recognition validation, CLI platform derivation and
 shared/CI permission handling, advertising integration details, and deletion
 propagation. Provider and bot-signal availability must be verified for the actual
 data path. Do not silently treat these open implementation decisions as proven
@@ -123,5 +123,6 @@ capabilities or user commitments.
 The product-level scope is confirmed. The technical assessment evaluates the
 preferred shape and alternatives against this brief, including the smaller launch
 workload, operating costs, portability, and remaining feasibility gaps.
-The local Package 1 foundation is implemented; live provider provisioning and
-all collection/product capabilities remain subsequent work.
+The local TypeScript Package 1 foundation is implemented. Its Rust port, live
+provider provisioning, and all collection/product capabilities remain subsequent
+work; an accepted architecture is not implementation evidence.

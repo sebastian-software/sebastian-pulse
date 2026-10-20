@@ -2,13 +2,16 @@
 
 ## Status and planning basis
 
-- Date: 2026-10-20. P1 implementation plan; Package 1 local foundation is implemented; live target setup is pending.
+- Date: 2026-10-20. P1 implementation plan; the TypeScript Package 1 foundation
+  exists. The accepted Rust port and live target setup are pending.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-10 ARM, single node, Frankfurt;
   1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
 - Initial forecast: about 1,000 pageviews/day, assumed portfolio-wide for sizing.
 - Requirements: [confirmed brief](../discovery/analytics-service-brief.md).
-- Rationale: [portable container/Postgres decision](../adr/0001-portable-container-and-postgres.md).
+- Rationale: [ADR index](../adr/README.md), including the
+  [portable container/Postgres decision](../adr/0001-portable-container-and-postgres.md)
+  and [Rust backend decision](../adr/0003-rust-backend.md).
 - Evidence and pricing: [technical assessment](../discovery/bunny-planetscale-assessment.md).
 - Discovery originated in OSS Metrics at `000db1f`; this repository owns the
   service brief, glossary, ADR, and implementation from Package 1 onward.
@@ -18,37 +21,40 @@ The existing public OSS Metrics API, Rybbit integration, and website remain a
 separate application. An owned service domain and production operator setup
 remain deployment inputs.
 
-The README describes implemented commands. The packages below describe the
-remaining target, including capabilities that do not exist in the foundation.
-W1's local/container/CI portion is in scope now; actual Bunny-to-PS-10 proof
-requires later provider provisioning. No paid infrastructure has been created.
+The README describes implemented commands for the TypeScript foundation. The
+accepted backend target is now Rust. Complete the W1-R foundation port before
+expanding backend product features; the packages below are not evidence of
+implemented capabilities. Actual Bunny-to-PS-10 proof requires later provider
+provisioning. No paid infrastructure has been created.
 
 ## Architecture and portability contract
 
-Ship one application image that serves collection, MCP, admin, and report routes
-and runs a background work loop. Start with TypeScript on a supported Node.js
-LTS release, following the existing Node 24/pnpm convention. Pin the runtime,
-package manager, dependencies, and image in the new repository at bootstrap.
-Build `linux/amd64` for Bunny; the database's ARM SKU is independent of the app
-image architecture.
+Ship one Rust application image that serves collection, MCP, admin, and report
+routes and runs a background work loop. Use Axum/Tokio for HTTP and execution,
+SQLx for PostgreSQL, and the official `rmcp` SDK for MCP. Pin the toolchain,
+dependencies, and images during W1-R. Build `linux/amd64` for Bunny; the
+database's ARM SKU is independent of the app image architecture.
 
-Use an ordinary HTTP framework with standard Request/Response boundaries;
-Hono is the working choice. Use `pg` over verified TLS, SQL migrations, and
-application-owned PostgreSQL tables. No PlanetScale HTTP API or Bunny SDK is
-required in business logic. Keep provider deployment code under `ops/bunny/`.
-Serve compiled admin/report assets from the same app; use a small browser UI
-rather than introducing a separately hosted frontend.
+Use verified PostgreSQL TLS, SQL migrations, and application-owned tables. Check
+static SQL against the migrated test schema and verify SQLx offline metadata in
+CI. Dynamic queries still need parameterization and real-database checks. No
+PlanetScale HTTP API or Bunny SDK is required in business logic. Keep provider
+deployment code under `ops/bunny/`.
+
+Keep browser SDK and UI code in TypeScript. Serve compiled admin/report assets
+from the Rust app rather than introducing a separate frontend host. Establish
+versioned wire contracts and verify generated types against actual JSON behavior.
 
 Keep auth state in Postgres and maintain domain-owned user/workspace permissions.
-Better Auth with its Postgres and MCP integrations is the working library choice,
-not a hosted auth dependency. Use its maintained login/OAuth mechanisms rather
-than implementing OAuth token protocols. Verify the pinned package combination
-and intended internal MCP client's compatibility in W2. Keep OAuth issuer and
-report URLs on an owned domain so a hosting move can preserve their identity.
+Select a maintained Rust-compatible login/OAuth integration in W2; the former
+Better Auth working choice is withdrawn. Do not implement a custom OAuth
+authorization server or treat the MCP SDK as user management. Verify the selected
+combination with the intended MCP client. Keep OAuth issuer and report URLs on
+an owned domain so a hosting move can preserve their identity.
 
 ```mermaid
 flowchart LR
-    Web[Website SDK and consent UI] --> App[One container application]
+    Web[TypeScript website SDK and consent UI] --> App[One Rust container application]
     CLI[CLI telemetry client] --> App
     MCP[Internal MCP client] --> App
     UI[Admin and report browser views] --> App
@@ -163,14 +169,38 @@ successful readiness after reconnect, clean shutdown, and a synthetic write/read
 on the actual PS-10 configuration. `pnpm check`, `pnpm test:integration`, and
 `docker compose up --build --wait` must perform the named checks.
 
+### W1-R. Port the foundation to Rust
+
+Requires: the existing TypeScript W1 foundation and accepted ADR 0003. This port
+is the next backend step; it does not add collection or other product features.
+
+- Port startup/configuration, SQL migrations and history verification, restricted
+  runtime credentials, verified TLS, bounded pooling/timeouts, health checks,
+  release identity, and SIGTERM drain to Rust with Axum/Tokio and SQLx.
+- Preserve applied migration files and the migration-history contract. Do not
+  silently switch an existing database to an incompatible SQLx migration ledger.
+- Update container/Compose commands, CI, tests, and operating guides together.
+  Retain real PostgreSQL rollback, migration concurrency/history, permission,
+  outage/recovery, and container lifecycle checks.
+- Add offline query metadata for checked static SQL and verify it against the
+  migrated disposable PostgreSQL schema in CI. Build without production access.
+- Replace the TypeScript backend and its obsolete backend commands after parity
+  is verified. Retain TypeScript only where browser tooling requires it.
+
+Evidence: Rust formatting/linting, unit/integration checks, release build, and
+container checks pass for the same foundation contracts. Publish only the exact
+tested image. Document actual commands in the README rather than adding passing
+placeholders. Live provider and export/restore gates still apply separately.
+
 ### W2. Create an isolated workspace and manage its configuration
 
-Requires: W1.
+Requires: W1 and W1-R.
 
 - Implement workspace/project/configuration models, invites and verified email
   login, an internal admin shell, and domain-owned access grants.
-- Integrate maintained OAuth/MCP auth, including resource-bound tokens and scoped
-  tools. Use explicit client registration policy; enable compatibility paths only
+- Select a maintained Rust-compatible auth integration, then integrate OAuth/MCP
+  authorization, including resource-bound tokens and scoped tools. Use explicit
+  client registration policy; enable compatibility paths only
   when the intended client requires them. Verify an actual internal MCP login.
 - Provide CRUD for projects, goals, and recipients with recorded edits and
   concurrency conflict handling. Report recipients receive no event/admin access.
@@ -333,22 +363,26 @@ Evidence: normal work, restart, DB outage/reconnect, rollback to the preceding
 compatible application image, and complete auth/tenant lifecycle checks. Resize
 only from measured resource/query pressure, not from the old planning ceiling.
 
-## Verification interface to establish in W1
+## Verification interface across the Rust port
 
-| Planned task | Required proof |
+| Check area | Required proof |
 | --- | --- |
-| `pnpm check` | Typecheck, focused unit checks and reproducible build. |
-| `pnpm test:integration` | Real ordinary Postgres: migrations, tenant roles, writes, retries, jobs, expiry and restore cases. |
-| `pnpm test:e2e` | Browser consent/collection, admin CRUD and report access with test identities. |
-| `pnpm verify:portability` | Same image, synthetic dump/restore to a clean non-PlanetScale Postgres, comparable queries and report/job state. |
-| `pnpm smoke` | Explicit test target: health, release/schema identity and authorized synthetic collection/query. |
+| Rust checks | Formatting, linting, focused unit checks, and reproducible release build. |
+| Real PostgreSQL integration | Migrations/history, tenant roles, writes, retries, jobs, expiry, and restore cases as those capabilities are added. |
+| Container lifecycle | Fresh migration/startup, restricted runtime, readiness during DB outage/recovery, and graceful shutdown. |
+| Browser end-to-end | Consent/collection, admin CRUD, and report access with test identities. |
+| Portability | Same image, synthetic dump/restore to clean non-PlanetScale Postgres, comparable queries and report/job state. |
+| Smoke | Explicit test target: health and release/schema identity; authorized synthetic collection/query once implemented. |
+
+The existing TypeScript W1 commands are `pnpm check`, `pnpm test:integration`,
+`pnpm test:container`, and health-only `pnpm smoke`. They remain the runnable path
+until W1-R replaces the backend and documents the actual Rust commands. Do not
+present planned Rust, browser, or full portability checks as already implemented.
 
 CI uses synthetic data and local Postgres. Production dump/recovery exercises
 belong in an approved controlled environment, not a generic public CI runner.
-W1 implements `check`, focused `test:integration`, `test:container`, and health-only
-`smoke`. Browser E2E and full `verify:portability` are added with the corresponding
-features; no empty passing tasks stand in for them. Actual target checks remain
-separate from local synthetic evidence.
+Actual target checks remain separate from local synthetic evidence; no empty
+passing tasks stand in for missing checks.
 
 ## Starting operating cost
 
@@ -426,7 +460,8 @@ DDL/sequence/WAL handling and rehearsal; it is not necessary for the initial
 
 ## Release gates and remaining setup decisions
 
-Independent foundation work can start. The affected release package waits when:
+The Rust foundation port can proceed without resolving every later integration.
+The affected release package waits when:
 
 - The owned domain and actual provider/bootstrap operator setup are unresolved
   (live W1 setup, not a reason to redesign data collection).
@@ -454,10 +489,13 @@ customer MCP, full tracing and arbitrary warehouse imports outside this plan.
 - [PlanetScale upgrades](https://planetscale.com/docs/postgres/cluster-configuration/single-node)
 - [PlanetScale pricing calculator](https://planetscale.com/pricing?region=eu-central&engine=postgres&architecture=aarch64&replicas=0)
 - [PostgreSQL dump/restore contract](https://www.postgresql.org/docs/current/app-pgdump.html)
-- [Better Auth Postgres adapter](https://better-auth.com/docs/adapters/postgresql)
-- [Better Auth MCP integration](https://better-auth.com/docs/plugins/mcp)
+- [Axum](https://github.com/tokio-rs/axum)
+- [SQLx query checking](https://docs.rs/sqlx/latest/sqlx/macro.query.html)
+- [SQLx offline metadata](https://github.com/transact-rs/sqlx/blob/main/sqlx-cli/README.md)
+- [Official Rust MCP SDK](https://github.com/modelcontextprotocol/rust-sdk)
 
 At execution, revalidate these contracts, pinned library versions, repository
 instructions and in-scope working state. Planning commands are not implementation
-proof. The local W1 foundation is implemented; its live target proof still
-requires provider setup. W2 follows after the foundation checks pass.
+proof. The local TypeScript W1 foundation is implemented; W1-R ports it to Rust.
+Live target proof still requires provider setup. W2 follows after Rust foundation
+checks pass and includes the maintained auth selection.
