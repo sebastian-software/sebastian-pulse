@@ -1,4 +1,4 @@
-# Analytics service
+# Sebastian Analytics
 
 A Rust backend for the analytics service described in the
 [product brief](docs/discovery/analytics-service-brief.md). The initial deployment
@@ -15,7 +15,7 @@ Tokio, and SQLx. Projects, goals, and recipients have shared Rust operations wit
 membership checks, PostgreSQL RLS, version conflicts, and atomic audit records.
 Optional standard OIDC browser login, local sessions, protected configuration HTTP
 routes, and scoped stateless MCP tools are implemented. Self-hosted Rauthy in the
-EU is the current identity deployment direction; see the [auth operating guide](ops/rauthy/README.md).
+EU is the current identity deployment direction; see the [auth operating guide](ops/auth.md).
 Admin UI, invitations, report access, collection, reports, and jobs remain subsequent
 work in the [plan](docs/plans/analytics-service.md). No live analytics are collected.
 With auth settings absent, the server exposes only health routes; partial auth
@@ -36,10 +36,14 @@ UI code remain TypeScript; the backend no longer needs Node or pnpm.
 Install Docker with its Compose plugin. For host development and verification,
 install Rustup; `rust-toolchain.toml` pins Rust **1.97.1**, Rustfmt, and Clippy.
 Compose runs pinned PostgreSQL **18.6** without a host PostgreSQL installation.
+The default project is now `sebastian-analytics`. Existing local databases under
+the former project name remain untouched. To reuse those volumes, consistently
+set `COMPOSE_PROJECT_NAME=analytics-service` for Compose commands until you
+explicitly migrate the local data; do not run both projects on the same ports.
 
 ```sh
 docker compose up --build --wait
-docker compose exec -T app analytics-service smoke
+docker compose exec -T app sebastian-analytics smoke
 ```
 
 The API listens at `http://127.0.0.1:3000`; PostgreSQL is bound to
@@ -74,8 +78,8 @@ scripts/check.sh
 docker compose up -d --wait postgres
 TEST_DATABASE_ADMIN_URL=postgresql://postgres:local-admin-only@127.0.0.1:55432/postgres \
   scripts/test-integration.sh
-docker build -t analytics-service:local .
-ANALYTICS_IMAGE=analytics-service:local scripts/test-container.sh
+docker build -t sebastian-analytics:local .
+ANALYTICS_IMAGE=sebastian-analytics:local scripts/test-container.sh
 ```
 
 `check.sh` runs Rustfmt, Clippy, unit tests, and a locked build using committed
@@ -188,7 +192,7 @@ server never follows provider HTTP redirects or token-supplied URLs.
 linked principal and CSRF token; `POST /auth/logout` deletes the local session.
 Unlinked provider identities are denied, and no email-based account merge occurs.
 See the [identity ADR](docs/adr/0010-external-identity-and-workspace-grants.md) and
-[operator provisioning example](ops/rauthy/README.md) before enabling access.
+[operator provisioning example](ops/auth.md) before enabling access.
 
 Authenticated browser configuration routes:
 

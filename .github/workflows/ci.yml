@@ -51,14 +51,14 @@ jobs:
           context: .
           platforms: linux/amd64
           load: true
-          tags: analytics-service:ci
+          tags: sebastian-analytics:ci
           build-args: RELEASE_ID=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Exercise the exact tested image
         run: scripts/test-container.sh
         env:
-          ANALYTICS_IMAGE: analytics-service:ci
+          ANALYTICS_IMAGE: sebastian-analytics:ci
       - name: Log in to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -71,7 +71,7 @@ jobs:
         env:
           IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
         run: |
-          docker tag analytics-service:ci "$IMAGE"
+          docker tag sebastian-analytics:ci "$IMAGE"
           docker push "$IMAGE"
           docker inspect --format '{{join .RepoDigests "\n"}}' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"
       - name: Clean up disposable PostgreSQL

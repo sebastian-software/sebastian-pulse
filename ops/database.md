@@ -72,7 +72,7 @@ Run migrations once per release, **before** routing traffic to the new image:
 ```sh
 # Environment is supplied by the release runner's secret store.
 docker run --rm --env DATABASE_MIGRATION_URL --env DATABASE_CA_CERT \
-  ghcr.io/sebastian-software/analytics-service@sha256:REPLACE_WITH_TESTED_DIGEST \
+  ghcr.io/sebastian-software/sebastian-analytics@sha256:REPLACE_WITH_TESTED_DIGEST \
   migrate
 ```
 

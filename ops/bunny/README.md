@@ -43,6 +43,6 @@ References: [images](https://bunny.net/docs/magic-containers/deploy),
 [release action](https://bunny.net/docs/magic-containers/deploy-with-github-actions).
 
 Identity runs as a separate maintained provider under [ADR 0010](../../docs/adr/0010-external-identity-and-workspace-grants.md).
-See the [Rauthy contract](../rauthy/README.md) for its separate persistent cache
+See the [Rauthy contract](https://github.com/sebastian-software/sebastian-auth/blob/main/ops/bunny/README.md) for its separate persistent cache
 volume, dedicated database, EU-processing checks, and proven local MCP flow.
 The analytics application itself still needs no persistent volume.

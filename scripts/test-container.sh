@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 compose_file="$repo_root/compose.yaml"
-project="analytics-service-test-$$-${RANDOM}-${RANDOM}"
+project="sebastian-analytics-test-$$-${RANDOM}-${RANDOM}"
 
 if [[ -z "${ANALYTICS_IMAGE:-}" ]]; then
   printf '%s\n' 'Set ANALYTICS_IMAGE to the image that this container check should exercise.' >&2

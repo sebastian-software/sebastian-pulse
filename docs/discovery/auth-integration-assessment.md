@@ -11,7 +11,7 @@ authorizing its provisioning or changing the local access model.
 
 US identity processing is a material adoption barrier. Validate self-hosted
 Rauthy on Bunny, one EU region, with a dedicated provider database/role and
-persistent cache volume. See the [operating guide](../../ops/rauthy/README.md).
+persistent cache volume. See the [operating guide](../../ops/auth.md).
 The analytics app uses standard OIDC/OAuth without vendor user/organization APIs;
 local principal UUIDs, grants, and hashed sessions remain in PostgreSQL.
 
