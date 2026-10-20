@@ -15,6 +15,8 @@
   RLS. The previous Rauthy rollout is paused. Live deployment, invitations,
   collection, report access, and browser UI remain pending.
 - Run `scripts/check.sh` and the relevant real-PostgreSQL/container checks.
+  Changes to Bunny provisioning also require
+  `python3 -m unittest discover -s scripts -p 'test_bunny_provision.py'`.
   Keep SQLx offline metadata current; `scripts/prepare-sqlx.sh` uses an explicit
   migrated test database. Normal builds must not need production database access.
 - Never provide migration credentials to the application or log secret values.

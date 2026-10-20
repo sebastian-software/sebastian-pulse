@@ -56,6 +56,14 @@ Frankfurt/container/probe contract and uses native WorkOS settings. It is a
 commit tag and exact GHCR digest through `PULSE_IMAGE_TAG` and `PULSE_IMAGE_DIGEST`.
 Do not send unresolved `$env:` values or the earlier Rauthy-era image to Bunny.
 
+[`release.workos.json`](release.workos.json) records the published native WorkOS
+candidate from merged PR #6. Its main-branch CI run passed, including the image
+lifecycle checks. The public registry manifest was checked independently for the
+same digest and `linux/amd64` platform on October 21, 2026. Use its `imageTag` and
+`imageDigest` as the two release inputs; this record is not evidence that Bunny
+is already running the image. WorkOS Production still requires billing setup,
+and production database/runtime credentials must be resolved before provisioning.
+
 [`env.workos.production.template`](env.workos.production.template) lists the intended
 production secret references; its WorkOS production item is not provisioned.
 Create production credentials only as part of the authorized rollout. Resolve
@@ -65,6 +73,31 @@ digest characters before upload. Use the WorkOS production environment and its
 exact registered production callback; a staging key is not a production secret.
 Keep `BUNNY_API_KEY` in operator tooling, outside the container environment.
 Run all four migrations before starting the matching new image.
+
+### Provisioning tool
+
+`scripts/provision-bunny.py` validates the native template, resolves `$env:NAME`
+inputs from its process environment in memory, and creates the initial app. It
+refuses duplicate application names, mutable image tags, missing digest pins,
+staging WorkOS keys, a different production origin, non-Frankfurt regions, and
+operator/migration credentials in the runtime. Provider error bodies are
+suppressed because they can echo submitted secrets.
+
+```sh
+python3 scripts/provision-bunny.py --validate-template
+python3 -m unittest discover -s scripts -p 'test_bunny_provision.py'
+# Inject the release inputs and credentials through the operator's secret store.
+python3 scripts/provision-bunny.py --check
+python3 scripts/provision-bunny.py --create
+```
+
+The tool does not resolve `op://` references itself. Supply the values named in
+`env.workos.production.template` through a secret-manager runner; keep rendered
+credentials out of files and shell arguments. `--check` makes no network calls.
+`--create` returns only the new application ID and does not deploy it. Configure
+the endpoint/pull zone and verify the owned domain, TLS, cache bypass, and Host
+forwarding before deploying through Bunny's application deploy endpoint.
+Inspect an existing app before updating it; the tool never overwrites one.
 
 ## Previous OIDC application manifest
 
