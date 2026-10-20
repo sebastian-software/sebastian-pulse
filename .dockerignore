@@ -1,8 +1,12 @@
 .git
+.github
 node_modules
 dist
+target
 .env
 .env.*
 test
 docs
+ops
+scripts
 *.log

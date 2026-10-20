@@ -2,8 +2,8 @@
 
 ## Status and planning basis
 
-- Date: 2026-10-20. P1 implementation plan; the TypeScript Package 1 foundation
-  exists. The accepted Rust port and live target setup are pending.
+- Date: 2026-10-20. P1 implementation plan; the Rust Package 1 foundation exists.
+  Live target setup and all product packages remain pending.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-10 ARM, single node, Frankfurt;
   1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
@@ -27,11 +27,10 @@ The existing public OSS Metrics API, Rybbit integration, and website remain a
 separate application. An owned service domain and production operator setup
 remain deployment inputs.
 
-The README describes implemented commands for the TypeScript foundation. The
-accepted backend target is now Rust. Complete the W1-R foundation port before
-expanding backend product features; the packages below are not evidence of
-implemented capabilities. Actual Bunny-to-PS-10 proof requires later provider
-provisioning. No paid infrastructure has been created.
+The README describes implemented Rust commands. W1-R replaces the TypeScript
+foundation; the product packages below are not evidence of implemented features.
+Actual Bunny-to-PS-10 proof requires later provider provisioning. No paid
+infrastructure has been created.
 
 ## Architecture and portability contract
 
@@ -172,13 +171,15 @@ not for booting the local application.
 
 Evidence: clean boot and migrations, failed readiness with unavailable DB,
 successful readiness after reconnect, clean shutdown, and a synthetic write/read
-on the actual PS-10 configuration. `pnpm check`, `pnpm test:integration`, and
-`docker compose up --build --wait` must perform the named checks.
+on the actual PS-10 configuration. `scripts/check.sh`,
+`scripts/test-integration.sh`, and `scripts/test-container.sh` exercise local
+contracts; live provider checks remain separate.
 
 ### W1-R. Port the foundation to Rust
 
-Requires: the existing TypeScript W1 foundation and accepted ADR 0003. This port
-is the next backend step; it does not add collection or other product features.
+Status: implemented locally; target-platform proof remains part of live W1.
+This port replaces the TypeScript W1 foundation under ADR 0003 and does not add
+collection or other product features.
 
 - Port startup/configuration, SQL migrations and history verification, restricted
   runtime credentials, verified TLS, bounded pooling/timeouts, health checks,
@@ -197,6 +198,27 @@ Evidence: Rust formatting/linting, unit/integration checks, release build, and
 container checks pass for the same foundation contracts. Publish only the exact
 tested image. Document actual commands in the README rather than adding passing
 placeholders. Live provider and export/restore gates still apply separately.
+
+Port contract and evidence (2026-10-20):
+
+- Preserve health JSON/status, no-store headers, release identity, readiness
+  failure/recovery and drain behavior. Preserve restricted runtime roles,
+  verified TLS defaults, database/probe timeouts and the 20-second shutdown limit.
+- Preserve consecutive SQL filenames, exact SHA-256 text checksums,
+  `analytics.schema_migrations`, the advisory-lock identity and atomic migration
+  transaction. Rust accepted the existing TypeScript ledger with zero pending
+  migrations; the SQL file is unchanged.
+- Replace Node/pnpm entry points with one Rust binary (`serve`, `migrate`,
+  `healthcheck`, `smoke`) and documented shell commands. Environment variables
+  are injected explicitly; the binary does not automatically load `.env` files.
+- Baseline: five TypeScript unit cases and five PostgreSQL integration cases
+  passed before removal. Rust has 15 unit cases and six integration cases,
+  retaining all original integration scenarios and adding local-fixture URL
+  safety. SQLx offline metadata covers six static queries and passes CI's check
+  against the restricted test role.
+- Container lifecycle verification and CI validate the same `linux/amd64` image;
+  completion evidence is recorded with the change. No language-performance
+  speedup or live provider capacity is claimed by this foundation port.
 
 ### W2. Create an isolated workspace and manage its configuration
 
@@ -380,10 +402,11 @@ only from measured resource/query pressure, not from the old planning ceiling.
 | Portability | Same image, synthetic dump/restore to clean non-PlanetScale Postgres, comparable queries and report/job state. |
 | Smoke | Explicit test target: health and release/schema identity; authorized synthetic collection/query once implemented. |
 
-The existing TypeScript W1 commands are `pnpm check`, `pnpm test:integration`,
-`pnpm test:container`, and health-only `pnpm smoke`. They remain the runnable path
-until W1-R replaces the backend and documents the actual Rust commands. Do not
-present planned Rust, browser, or full portability checks as already implemented.
+The implemented foundation commands are `scripts/check.sh`,
+`scripts/test-integration.sh`, `scripts/test-container.sh`,
+`scripts/prepare-sqlx.sh`, and health-only `scripts/smoke.sh`. The README owns
+exact invocations. Browser and full portability checks arrive with their
+features; do not describe them as already implemented.
 
 CI uses synthetic data and local Postgres. Production dump/recovery exercises
 belong in an approved controlled environment, not a generic public CI runner.
@@ -466,8 +489,8 @@ DDL/sequence/WAL handling and rehearsal; it is not necessary for the initial
 
 ## Release gates and remaining setup decisions
 
-The Rust foundation port can proceed without resolving every later integration.
-The affected release package waits when:
+The Rust foundation is ready for subsequent packages without resolving every
+later integration. The affected release package waits when:
 
 - The owned domain and actual provider/bootstrap operator setup are unresolved
   (live W1 setup, not a reason to redesign data collection).
@@ -502,6 +525,6 @@ customer MCP, full tracing and arbitrary warehouse imports outside this plan.
 
 At execution, revalidate these contracts, pinned library versions, repository
 instructions and in-scope working state. Planning commands are not implementation
-proof. The local TypeScript W1 foundation is implemented; W1-R ports it to Rust.
-Live target proof still requires provider setup. W2 follows after Rust foundation
-checks pass and includes the maintained auth selection.
+proof. The local Rust W1/W1-R foundation is implemented. Live target proof still
+requires provider setup. W2 is the next product package and includes the
+maintained auth selection.

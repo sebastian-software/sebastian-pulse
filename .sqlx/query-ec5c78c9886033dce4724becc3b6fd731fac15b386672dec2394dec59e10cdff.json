@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        CREATE TABLE IF NOT EXISTS analytics.schema_migrations (\n          version text PRIMARY KEY,\n          checksum text NOT NULL,\n          applied_at timestamptz NOT NULL DEFAULT now()\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "ec5c78c9886033dce4724becc3b6fd731fac15b386672dec2394dec59e10cdff"
+}

@@ -9,8 +9,8 @@ Keep this consolidation aligned when a living product decision changes.
 See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)
 for the selected Bunny Magic Containers / PlanetScale PS-10 starting configuration.
-The Package 1 local foundation is implemented in this repository. Provider
-provisioning has not started. See the README for its commands and evidence.
+The Package 1 local foundation is implemented in Rust in this repository.
+Provider provisioning has not started. See the README for its commands and evidence.
 
 | Product decision | Owning record |
 | --- | --- |
@@ -135,6 +135,6 @@ capabilities or user commitments.
 The product-level scope is confirmed. The technical assessment evaluates the
 preferred shape and alternatives against this brief, including the smaller launch
 workload, operating costs, portability, and remaining feasibility gaps.
-The local TypeScript Package 1 foundation is implemented. Its Rust port, live
-provider provisioning, and all collection/product capabilities remain subsequent
-work; an accepted architecture is not implementation evidence.
+The local Rust Package 1 foundation is implemented. Live provider provisioning
+and all collection/product capabilities remain subsequent work; accepted product
+scope is not implementation evidence.

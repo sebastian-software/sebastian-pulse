@@ -8,9 +8,9 @@ deployment is complete.
 
 | ID | Decision | Status | Implementation |
 | --- | --- | --- | --- |
-| 0001 | [Portable container and PostgreSQL](0001-portable-container-and-postgres.md) | accepted | Local TypeScript foundation exists; Rust port and live deployment pending. |
+| 0001 | [Portable container and PostgreSQL](0001-portable-container-and-postgres.md) | accepted | Local Rust foundation exists; live deployment pending. |
 | 0002 | [Living decision records](0002-living-architecture-decisions.md) | accepted | This index, template, and repository instructions establish the convention. |
-| 0003 | [Rust backend](0003-rust-backend.md) | accepted | Target architecture; foundation port pending. |
+| 0003 | [Rust backend](0003-rust-backend.md) | accepted | Rust foundation implemented; collection and other product packages pending. |
 | 0004 | [Product scope and priorities](0004-product-scope-and-priorities.md) | accepted | P1/P2/P3 scope agreed; product features pending. |
 | 0005 | [Structured observations](0005-structured-observations.md) | accepted | Website/CLI collection and traffic classification pending. |
 | 0006 | [Privacy, consent, and recognition](0006-privacy-consent-and-recognition.md) | accepted | Product boundaries agreed; concrete policy and methods need validation before use. |

@@ -3,11 +3,11 @@
 - Use US English for code, documentation, commits, and GitHub content.
 - Keep the service portable: standard container HTTP and PostgreSQL boundaries.
 - Read the product brief and implementation plan before expanding product scope.
-- The accepted backend target is Rust; the checked-in foundation is still
-  TypeScript. Do not describe the Rust port as implemented until it is verified.
-- For the existing TypeScript foundation, run `pnpm check` and the relevant
-  real-database/container checks. Update the documented verification path as
-  part of the Rust port; do not substitute empty passing commands.
+- The backend foundation is Rust (Axum/Tokio/SQLx); browser SDK/UI code will
+  remain TypeScript. Collection and other product packages are not implemented.
+- Run `scripts/check.sh` and the relevant real-PostgreSQL/container checks.
+  Keep SQLx offline metadata current; `scripts/prepare-sqlx.sh` uses an explicit
+  migrated test database. Normal builds must not need production database access.
 - Never provide migration credentials to the application or log secret values.
 - Migration files are immutable after application; add a numbered SQL file.
 

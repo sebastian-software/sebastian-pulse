@@ -50,7 +50,7 @@ Run migrations once per release, **before** routing traffic to the new image:
 # Environment is supplied by the release runner's secret store.
 docker run --rm --env DATABASE_MIGRATION_URL --env DATABASE_CA_CERT \
   ghcr.io/sebastian-software/analytics-service@sha256:REPLACE_WITH_TESTED_DIGEST \
-  node dist/migrate.js
+  migrate
 ```
 
 TLS verification is enabled without any additional setting. Do not pass the
@@ -77,5 +77,5 @@ roles or transfer provider backup history. Restore schema ownership and grants
 deliberately. For a real cutover, stop all writers, export/restore, verify data and
 permissions, change runtime configuration, and resume. Keep the source frozen;
 after new writes on the target, do not switch back without reconciling them.
-See W10 in the plan for auth, job, report, expiry, and deletion checks once those
+See W9 in the plan for auth, job, report, expiry, and deletion checks once those
 features exist. This package has not performed the production exit rehearsal.
