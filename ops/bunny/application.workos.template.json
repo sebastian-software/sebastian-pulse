@@ -1,0 +1,132 @@
+{
+  "name": "sebastian-pulse",
+  "runtimeType": "shared",
+  "terminationGracePeriodSeconds": 30,
+  "autoScaling": {
+    "min": 1,
+    "max": 1
+  },
+  "regionSettings": {
+    "allowedRegionIds": [
+      "DE"
+    ],
+    "requiredRegionIds": [
+      "DE"
+    ],
+    "maxAllowedRegions": 1
+  },
+  "containerTemplates": [
+    {
+      "name": "pulse",
+      "imageName": "sebastian-pulse",
+      "imageNamespace": "sebastian-software",
+      "imageRegistryId": "1156",
+      "imageTag": "$env:PULSE_IMAGE_TAG",
+      "imageDigest": "$env:PULSE_IMAGE_DIGEST",
+      "imagePullPolicy": "ifNotPresent",
+      "entryPoint": {
+        "argumentsArray": [
+          "serve"
+        ]
+      },
+      "environmentVariables": [
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "DATABASE_TLS",
+          "value": "verify-full"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "$env:DATABASE_URL"
+        },
+        {
+          "name": "AUTH_PUBLIC_URL",
+          "value": "https://pulse.sebastian-software.de"
+        },
+        {
+          "name": "WORKOS_API_KEY",
+          "value": "$env:WORKOS_API_KEY"
+        },
+        {
+          "name": "WORKOS_CLIENT_ID",
+          "value": "$env:WORKOS_CLIENT_ID"
+        },
+        {
+          "name": "WORKOS_AUTHKIT_URL",
+          "value": "$env:WORKOS_AUTHKIT_URL"
+        },
+        {
+          "name": "WORKOS_COOKIE_PASSWORD",
+          "value": "$env:WORKOS_COOKIE_PASSWORD"
+        }
+      ],
+      "endpoints": [
+        {
+          "displayName": "https",
+          "cdn": {
+            "isSslEnabled": false,
+            "portMappings": [
+              {
+                "containerPort": 3000
+              }
+            ]
+          }
+        }
+      ],
+      "probes": {
+        "startup": {
+          "httpGet": {
+            "request": {
+              "path": "/health/ready",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 24,
+          "initialDelaySeconds": 5
+        },
+        "readiness": {
+          "httpGet": {
+            "request": {
+              "path": "/health/ready",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 3,
+          "initialDelaySeconds": 5
+        },
+        "liveness": {
+          "httpGet": {
+            "request": {
+              "path": "/health/live",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 6,
+          "initialDelaySeconds": 5
+        }
+      }
+    }
+  ]
+}

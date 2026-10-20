@@ -1,12 +1,31 @@
 # WorkOS privacy and exit assessment
 
-Checked October 20, 2026. This review covers the assessed configuration: hosted AuthKit and Connect using the standard WorkOS login domain, with no custom login domain. It is based on public WorkOS materials and the accepted architecture in [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md); no WorkOS tenant, order form, security report, or negotiated terms were inspected.
+Checked October 20, 2026. This review covers the assessed configuration: hosted AuthKit and Connect using the standard WorkOS login domain, with no custom login domain. It is based on public WorkOS materials and the accepted architecture in [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md); the staging setup was inspected, but no order form, security report, or negotiated terms were inspected.
 
 ## Conclusion
 
-WorkOS is operationally replaceable if the service keeps principal IDs and all access grants in its own PostgreSQL database. User profile data can be enumerated through the API, and the Terms of Service promise export assistance for a limited period after termination if requested before termination. The reviewed public materials do not establish a turnkey exit for credentials or sessions: password-hash export is not documented, sessions are WorkOS-issued, and passkeys are tied to their relying-party domain. Budget for fresh sign-in, password reset, and passkey enrollment at an exit unless WorkOS confirms broader export support in writing.
+The selected direction is managed WorkOS AuthKit and Connect without a custom
+login domain. WorkOS owns users, organizations, memberships, roles, permissions,
+and provider sessions. Pulse retains stable product IDs and analytics data. The
+native Rust boundary, browser/MCP routes, and request-scoped RLS are fixture-tested.
+A staging project is available; real browser/MCP proof and deployment remain
+pending. WorkOS is the sole authority for managed membership and permissions.
 
-Using this WorkOS configuration would include U.S. processing. The current direction instead prioritizes EU-operated identity and validates self-hosted Rauthy under ADR 0010; no WorkOS account or contract has been created. The DPA authorizes international transfers, including transfers to the United States, and its transfer questionnaire names the United States as a storage/access country for data transferred outside the EEA, Switzerland, or UK. The materials reviewed do not establish an EU-only deployment or a regional pinning commitment. If EU-only processing is required, treat that as an unresolved release gate and obtain a service-specific written commitment before production use.
+A provider exit therefore includes authorization data and configuration, not just
+user profiles. Export and reconcile organization membership, role definitions,
+permission assignments, Connect applications, and mappings to Pulse IDs before
+cutover. Public API access supports implementing such an export; this is not a
+verified complete export tool or a promise that credentials and sessions move.
+Plan fresh sign-in, password reset, and passkey re-enrollment where export is not
+confirmed. Keep the WorkOS SDK and authorization resolution at the integration
+boundary rather than limiting the product to the lowest common OIDC surface.
+
+Using this configuration includes US processing. The DPA authorizes international
+transfers and identifies US storage/access. The reviewed public materials do not
+establish an EU-only deployment or regional pinning commitment. Record the
+applicable DPA, transfer basis, processing locations, and service-specific terms
+before collecting production identities; do not describe the default managed
+configuration as EU-resident.
 
 ## Privacy and contract evidence
 
@@ -16,7 +35,8 @@ The DPA authorizes WorkOS and its subprocessors to transfer personal data across
 
 The current [WorkOS Trust Center](https://trust.workos.com/) is the source for its changing subprocessor and security materials. The public Trust Center summary lists AWS, Cloudflare, Datadog, and Postmark for Core Product in the U.S.; a February 27, 2026 [WorkOS update](https://trust.workos.com/) says ClickHouse was added for in-product reporting and insights. This is not a complete, AuthKit-specific inventory. The DPA gives WorkOS general authorization to use subprocessors, provides a 14-calendar-day objection window after notice, and places responsibility on the subscriber to check the list. Obtain the complete current list, roles, and processing locations for AuthKit, Connect, hosted UI, email, security/risk checks, logs, support, and backups; assign an owner to monitor changes.
 
-The Terms prohibit using the service to collect or process “Sensitive Personal Data,” defined to include data classified as sensitive by law or policy and EU special-category data. Keep the WorkOS profile to the minimum authentication fields needed, such as email and display name. Keep reports, analytics data, workspace configuration, recipient addresses, and authorization grants in our service. Do not put secrets or sensitive information in WorkOS metadata; WorkOS limits user metadata to ten key-value pairs and warns against storing sensitive information there.
+The Terms prohibit using the service to collect or process “Sensitive Personal Data,” defined to include data classified as sensitive by law or policy and EU special-category data. Keep the WorkOS profile to the minimum authentication fields needed, such as email and display name. Keep reports, analytics data, workspace configuration, and report-recipient addresses in our service. WorkOS receives the organization
+and access-management data needed for its managed authorization role. Do not put secrets or sensitive information in WorkOS metadata; WorkOS limits user metadata to ten key-value pairs and warns against storing sensitive information there.
 
 At termination, the DPA says WorkOS will delete Subscriber Personal Data, except backups and archival copies deleted according to its retention schedule and data it must retain by law. The Terms separately say WorkOS may irrevocably delete account information, and that it will assist with exporting Subscriber Data for up to 30 days after termination only if the subscriber requested the assistance before termination. The Terms do not specify export format, object coverage, credential coverage, or an export fee. Request and verify the export before giving termination notice; obtain the backup-deletion schedule and written deletion confirmation process as contract inputs. WorkOS’s individual-user delete endpoint is documented as permanent and irreversible.
 
@@ -29,17 +49,34 @@ At termination, the DPA says WorkOS will delete Subscriber Personal Data, except
 | Sessions and tokens | AuthKit returns access and refresh tokens. The [session API](https://workos.com/docs/reference/authkit/session) can list active sessions and revoke a session. | No cross-provider session transfer is documented. Treat WorkOS sessions and refresh tokens as non-portable; cut over by issuing sessions from the new provider, requiring users to sign in again, then revoking remaining WorkOS sessions. This is an integration inference, not an explicit WorkOS guarantee. |
 | Passkeys | [WorkOS passkeys](https://workos.com/docs/authkit/passkeys) are available only through hosted AuthKit UI. There is no self-service screen to view, rename, add, or remove them; operator removal is through the WorkOS Dashboard. WorkOS says passkeys are bound to the domain where registered and advises configuring the custom AuthKit domain before production enrollment; adding it later prevents use of credentials registered on the old domain. The [WebAuthn specification](https://www.w3.org/TR/webauthn-2/) scopes a credential key pair to a relying party and says the private key remains with the authenticator. | With the assessed standard WorkOS login domain, do not enable passkeys unless users can re-enroll when the login domain or provider changes. A provider exit should assume passkey re-enrollment. If passkeys become a requirement, revisit the domain decision before enrollment; WorkOS describes custom domains as a paid feature in its [custom domains guide](https://workos.com/docs/custom-domains). |
 | WorkOS identities and links | [Identity Linking](https://workos.com/docs/authkit/identity-linking) says WorkOS links credentials using verified email ownership, and [Users and Organizations](https://workos.com/docs/authkit/users-organizations) says duplicate user emails are not allowed. | This is WorkOS’s account-linking behavior, not a safe rule for merging our local principals. Never attach local grants or merge local accounts solely because a WorkOS/new-provider email matches. |
-| App data and grants | ADR 0010 keeps principal IDs, workspace memberships, recipient grants, and permission checks in our PostgreSQL database. | These remain portable if we preserve an internal principal UUID and keep provider organization roles out of authorization decisions. |
+| Product data and authorization | ADR 0010 keeps stable product IDs and analytics data in PostgreSQL; WorkOS owns users, organizations, memberships, roles, and permissions. | Export and validate both the product ID mapping and provider-managed grants. Preserving product IDs alone is insufficient for an authorization migration. |
 
 ## Three-year exit design
 
-Keep an app-owned `principal_id` as the identity referenced by workspace memberships, report-recipient grants, audit records, and configuration. Keep a separate identity map with a unique `(issuer, subject)` pair pointing to that principal. Treat WorkOS’s `user_id`, email, and organization IDs as provider data, not as local principal keys. Set WorkOS `external_id` to the internal principal UUID where available; it is intended to associate a WorkOS user with an identifier in our own system and can be queried through the API. Keep that value pseudonymous and do not copy grants or business data into AuthKit metadata.
+Keep app-owned principal and workspace UUIDs as references in analytics data and
+audit. Bind each identity to an exact provider/environment and subject, and each
+organization to its stable product workspace. Use WorkOS external IDs where
+supported without copying analytics payloads or secrets into metadata. WorkOS
+remains the source of membership and permission authority; a local mapping does
+not authorize a user independently.
 
-For a provider change, export a mapping of each local `principal_id` to the current WorkOS user and verified identity data before termination. Import or recreate users in the new provider with the same internal `principal_id` as external metadata where supported, then bind the new exact `(issuer, subject)` to that principal after validating the new provider’s authentication result. Keep workspace and report grants unchanged because they reference the local principal. Switch the configured issuer/client and sign-in flow only after the mapping is checked. Revoke old sessions after the cutover and request WorkOS deletion only after the export has been verified.
+Before termination, export users and identity links, organizations, memberships,
+role definitions and permission slugs, role assignments, relevant invitations and
+policies, Connect client configuration/authorizations where exportable, and all
+mappings to product UUIDs. Import or recreate equivalent authority in the new
+provider, check allowed and denied access for each pilot case, and bind verified
+new identities using controlled migration evidence. Verify that inactive users,
+revoked memberships, and report-only recipients do not gain internal access.
+
+Cut over only after the new browser and MCP login, tenant context/RLS, permission
+changes, revocation, and rollback path pass. End old sessions and revoke remaining
+old credentials. Request deletion after the export and grant reconciliation are
+verified. Password hashes, MFA factors, passkeys, and sessions require separate
+export answers; do not assume the API profile export includes them.
 
 If a user cannot be linked by a carried-forward internal ID, use a controlled relink: while both providers are available, require an authenticated session for the existing local principal and a successful sign-in with the new provider, then have the user confirm the link. If the old provider is unavailable, use a documented account-recovery process with additional proof and operator review. A matching email address alone must never transfer a principal or its grants. This avoids depending on WorkOS’s automatic verified-email linking and handles changed, shared, recycled, or conflicting addresses.
 
-Target an export/relink rehearsal by October 2028 and a provider decision or exit rehearsal by October 2029. The rehearsal should include users with password, social login, SSO, and passkey methods where enabled; local grants; email changes; duplicate/conflicting emails; session expiry and revocation; and rollback to the old issuer while the overlap window remains open.
+Target an export/relink rehearsal by October 2028 and a provider decision or exit rehearsal by October 2029. The rehearsal should include users with password, social login, SSO, and passkey methods where enabled; organization memberships and role/permission assignments; email changes; duplicate/conflicting emails; session expiry and revocation; and rollback to the old issuer while the overlap window remains open.
 
 ## Inputs to resolve before production
 

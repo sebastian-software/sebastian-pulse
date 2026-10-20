@@ -6,10 +6,12 @@
 - The backend foundation is Rust (Axum/Tokio/SQLx); browser SDK/UI code will
   remain TypeScript. Workspace configuration persistence, RLS, optional standard
   OIDC login, protected configuration HTTP routes, and scoped MCP exist.
-  Rauthy operations live in the separate public
-  `sebastian-software/sebastian-auth` repository; this app owns OIDC integration
-  and workspace grants. Self-hosted EU Rauthy is being validated. Live deployment,
-  invitations, collection, report access, and browser UI remain pending.
+  WorkOS AuthKit/Connect is the selected managed identity and authorization
+  target. Native AuthKit/Connect routes and request-scoped PostgreSQL RLS are
+  implemented and fixture-tested; a real provider/client proof is in progress.
+  WorkOS owns users, organizations, memberships, roles, and permission mappings; preserve stable product IDs and transaction-local
+  RLS. The previous Rauthy rollout is paused. Live deployment, invitations,
+  collection, report access, and browser UI remain pending.
 - Run `scripts/check.sh` and the relevant real-PostgreSQL/container checks.
   Keep SQLx offline metadata current; `scripts/prepare-sqlx.sh` uses an explicit
   migrated test database. Normal builds must not need production database access.

@@ -1,19 +1,26 @@
 # Authentication integration assessment
 
-Assessed October 20, 2026. The accepted direction is a separate maintained identity
-provider, including managed identity, under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md).
-No provider account, production configuration, or subscription has been created.
-The current deployment direction prioritizes EU-operated identity and validates
-self-hosted Rauthy. This comparison preserves the WorkOS findings without
-authorizing its provisioning or changing the local access model.
+Assessed October 20, 2026; updated October 21, 2026. The accepted direction is
+managed WorkOS AuthKit and Connect under
+[ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). WorkOS owns users,
+organizations, memberships, roles, and permissions. Pulse owns product data,
+stable internal IDs, organization-to-workspace bindings, and enforcement of
+verified access. The default hosted login domain avoids a custom-domain dependency.
 
-## EU-operated direction and standard boundary
+A staging project, exact local callback, and short-lived server key are configured.
+The local service reaches the real hosted AuthKit login. Native SDK and PostgreSQL
+tests cover browser sessions, permission changes, tenant isolation, and MCP token
+validation. A completed real user login, real MCP client, and production rollout
+remain separate evidence; see the [operating guide](../../ops/workos.md).
 
-US identity processing is a material adoption barrier. Validate self-hosted
-Rauthy on Bunny, one EU region, with a dedicated provider database/role and
-persistent cache volume. See the [operating guide](../../ops/auth.md).
-The analytics app uses standard OIDC/OAuth without vendor user/organization APIs;
-local principal UUIDs, grants, and hashed sessions remain in PostgreSQL.
+## Earlier EU-operated direction and standard boundary
+
+Self-hosted Rauthy on Bunny was the earlier direction for EU-operated identity,
+with a dedicated provider database/role and persistent cache volume. Its production
+rollout is paused. The [earlier operating guide](../../ops/auth.md) preserves that
+proof. Explicit legacy configuration still supports standard OIDC/OAuth with local
+grants and hashed sessions. Native WorkOS mode is a separate, mutually exclusive
+configuration and does not fall back to those grants.
 
 The Rust adapter supports exact issuer paths/trailing slashes, standard audience
 strings/arrays, RS256, PKCE S256, subject-bound verified-email userinfo, bounded
@@ -32,7 +39,7 @@ operating constraints, not properties solved by the analytics OIDC adapter.
 
 ## WorkOS AuthKit and Connect
 
-WorkOS was the managed candidate assessed before the EU-operated identity requirement. Its [MCP integration](https://workos.com/docs/authkit/mcp)
+WorkOS is the selected managed provider. Its [MCP integration](https://workos.com/docs/authkit/mcp)
 provides the authorization server, resource indicators, audience-bound tokens, and
 CIMD, with DCR available for older clients. Analytics still validates tokens and
 serves protected-resource metadata. Its [Rust SDK](https://workos.com/docs/sdks/rust)
@@ -55,18 +62,21 @@ for read-only and read/write access. This requires the intended MCP client to
 accept a configured client ID and send the resource parameter; do not assume
 all clients support that path.
 
-Configure the exact MCP resource URL and reject other audiences. Preserve local
-workspace/recipient grants rather than importing the provider's organization model.
-Verify email ownership through validated provider claims/API before binding report
-access; accepting an invitation alone is insufficient.
+Configure the exact MCP resource URL and reject other audiences. Resolve the
+current active WorkOS membership and effective role permissions for each protected
+operation. Intersect MCP client scopes with those permissions. Keep only stable
+provider-to-product ID mappings locally; stale local grants cannot widen access
+in this mode. Verify email ownership through authenticated provider responses
+before granting internal access; accepting an invitation alone is insufficient.
 
 The [public DPA](https://workos.com/legal/data-processing-addendum) covers US
 transfers and names US storage/access in its transfer questionnaire. It does not
 establish an EU-only AuthKit deployment. Confirm applicable processing terms,
-regional options, custom-domain costs, and credential/identity export before
-provisioning. Standard OAuth support does not prove a lossless provider exit.
+regional options, and export capabilities before production. Provider replacement
+also requires organizations, memberships, roles, permissions, and product ID
+mapping reconciliation. Standard OAuth support does not prove a lossless exit.
 
-## Better Auth
+## Earlier Better Auth comparison
 
 [Better Auth](https://better-auth.com/docs/introduction) is a TypeScript auth
 framework. Its [Infrastructure offering](https://better-auth.com/docs/infrastructure/introduction)
@@ -82,8 +92,8 @@ identity-service operations, upgrades, key management, and backup verification.
 
 ## Next evidence
 
-Keep W2 configuration operations provider-independent. Before enabling login,
-validate the preferred registration path and real MCP client, browser sessions,
+Keep product configuration operations behind verified internal IDs and permission
+context. Before production, validate the registration path and real MCP client, browser sessions,
 verified email, exact issuer/audience, read/write scope separation, revocation,
-recipient forwarding, identity export, and the applicable data-processing terms.
+recipient forwarding, identity and grant export, and the applicable data-processing terms.
 No custom OAuth authorization server is a fallback for an integration gap.

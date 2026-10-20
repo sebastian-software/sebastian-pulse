@@ -11,6 +11,7 @@ repository = "https://github.com/sebastian-software/sebastian-pulse"
 integration-tests = []
 
 [dependencies]
+async-trait = "=0.1.92"
 axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
 base64 = "=0.22.1"
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["aws_lc_rs", "use_pem"] }
@@ -28,6 +29,7 @@ thiserror = "=2.0.21"
 tokio = { version = "=1.54.0", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time", "io-util"] }
 url = "=2.5.8"
 uuid = { version = "=1.28.0", features = ["v4", "serde"] }
+workos = { version = "=3.4.0", default-features = false }
 
 [[test]]
 name = "foundation"
@@ -43,4 +45,8 @@ required-features = ["integration-tests"]
 
 [[test]]
 name = "authentication"
+required-features = ["integration-tests"]
+
+[[test]]
+name = "workos_authentication"
 required-features = ["integration-tests"]

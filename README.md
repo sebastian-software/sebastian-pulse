@@ -15,8 +15,11 @@ health checks, shutdown, CI, and workspace configuration persistence with Axum,
 Tokio, and SQLx. Projects, goals, and recipients have shared Rust operations with
 membership checks, PostgreSQL RLS, version conflicts, and atomic audit records.
 Optional standard OIDC browser login, local sessions, protected configuration HTTP
-routes, and scoped stateless MCP tools are implemented. Self-hosted Rauthy in the
-EU is the current identity deployment direction; see the [auth operating guide](ops/auth.md).
+routes, and scoped stateless MCP tools are implemented. The selected target is
+managed WorkOS AuthKit/Connect, including organization membership and permissions.
+Its native Rust boundary, browser/MCP routes, and request-scoped RLS are
+fixture-tested; real provider/client proof and production deployment remain pending; see the [WorkOS integration guide](ops/workos.md).
+The [OIDC operating guide](ops/auth.md) documents the previous local-grant proof.
 Admin UI, invitations, report access, collection, reports, and jobs remain subsequent
 work in the [plan](docs/plans/analytics-service.md). No live analytics are collected.
 With auth settings absent, the server exposes only health routes; partial auth

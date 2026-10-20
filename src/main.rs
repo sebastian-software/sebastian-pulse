@@ -91,11 +91,20 @@ async fn serve(env: &HashMap<String, String>) -> Result<(), ()> {
     let listener = TcpListener::bind((std::net::Ipv4Addr::UNSPECIFIED, config.port))
         .await
         .map_err(|_| log::event("server_failed", json!({"code":"BIND"})))?;
-    let auth = sebastian_pulse::auth::AuthConfig::from_env(env)
-        .map_err(|error| log::event("startup_failed", json!({"reason":error.to_string()})))?
-        .map(|config| sebastian_pulse::auth::AuthService::new(pool.clone(), config))
-        .transpose()
+    let workos = sebastian_pulse::auth::workos::WorkosConfig::from_env(env)
         .map_err(|_| log::event("startup_failed", json!({"code":"AUTH_CONFIGURATION"})))?;
+    let auth = if let Some(config) = workos {
+        Some(
+            sebastian_pulse::auth::AuthService::new_workos(pool.clone(), config)
+                .map_err(|_| log::event("startup_failed", json!({"code":"AUTH_CONFIGURATION"})))?,
+        )
+    } else {
+        sebastian_pulse::auth::AuthConfig::from_env(env)
+            .map_err(|error| log::event("startup_failed", json!({"reason":error.to_string()})))?
+            .map(|config| sebastian_pulse::auth::AuthService::new(pool.clone(), config))
+            .transpose()
+            .map_err(|_| log::event("startup_failed", json!({"code":"AUTH_CONFIGURATION"})))?
+    };
     let auth_cleanup = auth.as_ref().map(|auth| auth.start_cleanup());
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
     let server = axum::serve(listener, service.router_with_auth(auth))

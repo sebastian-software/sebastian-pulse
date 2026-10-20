@@ -45,7 +45,9 @@ _Avoid_: Visitor, email address, identity-provider organization
 
 **Workspace membership**:
 An explicit internal read or administration grant for one analytics workspace.
-Membership in one workspace gives no access to another.
+Membership in one workspace gives no access to another. In the selected WorkOS
+integration, an active organization membership and its effective WorkOS permissions
+provide this authority; a stable organization-to-workspace mapping binds product data.
 _Avoid_: Report recipient, verified email
 
 **Report recipient**:

@@ -8,11 +8,20 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct WorkspaceStore {
     pool: PgPool,
+    caller: Option<crate::auth::Caller>,
 }
 
 impl WorkspaceStore {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self { pool, caller: None }
+    }
+
+    /// A request-local assertion from the authentication boundary; never input data.
+    pub fn for_caller(&self, caller: crate::auth::Caller) -> Self {
+        Self {
+            pool: self.pool.clone(),
+            caller: Some(caller),
+        }
     }
 
     pub async fn workspace(&self, actor: Uuid, workspace: Uuid) -> Result<Workspace> {
@@ -576,6 +585,19 @@ impl WorkspaceStore {
         .fetch_one(&mut *tx)
         .await?;
 
+        if let Some(caller) = self.caller
+            && let Some(allowed_workspace) = caller.workspace_id
+        {
+            if actor != caller.principal_id
+                || workspace != allowed_workspace
+                || (write && !caller.can_write)
+            {
+                return Err(WorkspaceError::Denied);
+            }
+            sqlx::query("SELECT set_config('analytics.managed_authority', 'workos', true), set_config('analytics.managed_permission', $1, true)")
+                .bind(if caller.can_write { "write" } else { "read" }).execute(&mut *tx).await?;
+            return Ok(tx);
+        }
         let role = sqlx::query_scalar!(
             r#"
             SELECT role

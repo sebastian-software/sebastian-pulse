@@ -14,7 +14,7 @@ the local and CI checks alone do not establish production readiness.
 | Health | `/health/live` for liveness, `/health/ready` for traffic readiness; no cached responses. |
 | Shutdown | SIGTERM, platform grace at least 25 seconds; app deadline 20 seconds. |
 | Storage | No persistent app volume; authoritative state belongs in PostgreSQL. |
-| Secrets | Runtime database URL/optional CA and, when enabled, the four AUTH_* settings; migration credentials in release runner only. |
+| Secrets | Runtime database URL/optional CA plus native WorkOS credentials and session-sealing key; migration credentials in release runner only. |
 | Database | PlanetScale Postgres PS-5 ARM HA in Frankfurt, PostgreSQL 18.6; one primary and two replicas, 10 GB, $15/month. |
 
 Release sequence: verify CI → run the same image's migrator with a separate
@@ -43,18 +43,37 @@ References: [images](https://bunny.net/docs/magic-containers/deploy),
 [shutdown](https://bunny.net/docs/magic-containers/graceful-shutdown),
 [release action](https://bunny.net/docs/magic-containers/deploy-with-github-actions).
 
-Identity runs as a separate maintained provider under [ADR 0010](../../docs/adr/0010-external-identity-and-workspace-grants.md).
-See the [Rauthy contract](https://github.com/sebastian-software/sebastian-auth/blob/main/ops/bunny/README.md) for its separate persistent cache
-volume, dedicated database, EU-processing checks, and proven local MCP flow.
-The analytics application itself still needs no persistent volume.
+Identity and authorization are managed by WorkOS AuthKit/Connect under
+[ADR 0010](../../docs/adr/0010-external-identity-and-workspace-grants.md).
+The app needs no persistent volume and no separately deployed Auth database.
+See the [WorkOS guide](../workos.md) for permissions, mapping, and live proof gates.
 
-## Initial application manifest
+## Native WorkOS deployment template
 
-[`application.json`](application.json) pins the tested public GHCR image from
+[`application.workos.template.json`](application.workos.template.json) preserves the
+Frankfurt/container/probe contract and uses native WorkOS settings. It is a
+**template, not a deployable pinned artifact**: supply the checked post-merge
+commit tag and exact GHCR digest through `PULSE_IMAGE_TAG` and `PULSE_IMAGE_DIGEST`.
+Do not send unresolved `$env:` values or the earlier Rauthy-era image to Bunny.
+
+[`env.workos.production.template`](env.workos.production.template) lists the intended
+production secret references; its WorkOS production item is not provisioned.
+Create production credentials only as part of the authorized rollout. Resolve
+references and substitute all template inputs in memory; do not save rendered
+credential files. Validate a full commit SHA and `sha256:` plus 64 hexadecimal
+digest characters before upload. Use the WorkOS production environment and its
+exact registered production callback; a staging key is not a production secret.
+Keep `BUNNY_API_KEY` in operator tooling, outside the container environment.
+Run all four migrations before starting the matching new image.
+
+## Previous OIDC application manifest
+
+The retained legacy [`application.json`](application.json) pins the previous
+OIDC/Rauthy-era public GHCR image from
 `b4189a7d089b951c75b2556dbe5284c1656b235f` by digest. It restricts deployment to
 Frankfurt (`DE`), one running instance, and a 30-second shutdown grace. Readiness
-uses `/health/ready`; liveness uses `/health/live`. PostgreSQL TLS verification
-and the exact production OIDC issuer and public origin are explicit.
+uses `/health/ready`; liveness uses `/health/live`. It does not contain the native WorkOS implementation. Do not deploy this legacy
+manifest for the selected WorkOS direction.
 
 [`env.production.template`](env.production.template) contains only 1Password
 references. Resolve the two `$env:NAME` runtime inputs in memory before sending
