@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-21
-- Change note: Choose managed WorkOS AuthKit and Connect, including its organization and permission model; pause self-hosted identity deployment.
+- Change note: Validate managed WorkOS browser login and scoped public PKCE MCP reads, writes, tenant isolation, and refresh against isolated local data; retain separate production gates.
 
 ## Context
 
@@ -131,9 +131,15 @@ removal, provider outage, MCP scope intersection, and provider logout.
 
 A WorkOS staging project and the local callback are configured. Real registration,
 verified email, PKCE callback, and browser session passed locally on October 21,
-2026. Real MCP client proof, concurrent refresh resilience, signing-key rollover against the real
-provider, production cookie/ingress configuration, deployment, and recovery remain
-completion gates. See the [WorkOS integration guide](../../ops/workos.md).
+2026. Two public S256 Connect clients passed real MCP initialization, tool
+discovery, workspace reads, tenant denial, and token refresh against isolated local
+PostgreSQL data. Read-only delegation denied writes even for an admin member;
+read/write delegation allowed synthetic project create/update/delete. Tampered
+tokens were rejected. Resource binding was required in both token exchange and
+refresh requests. Dynamic client registration, concurrent browser refresh
+resilience, signing-key rollover against the real provider, production
+cookie/ingress configuration, deployment, and recovery remain completion gates.
+See the [WorkOS integration guide](../../ops/workos.md).
 
 ## References
 

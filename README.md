@@ -18,8 +18,9 @@ Optional standard OIDC browser login, local sessions, protected configuration HT
 routes, and scoped stateless MCP tools are implemented. The selected target is
 managed WorkOS AuthKit/Connect, including organization membership and permissions.
 Its native Rust boundary, browser/MCP routes, and request-scoped RLS are
-fixture-tested, and real AuthKit browser login passed locally. The real MCP client
-proof and production deployment remain pending; see the [WorkOS integration guide](ops/workos.md).
+fixture-tested. Real AuthKit browser login and public PKCE Connect MCP reads,
+writes, scope isolation, and refresh passed against isolated local data. Production
+deployment remains pending; see the [WorkOS integration guide](ops/workos.md).
 The [OIDC operating guide](ops/auth.md) documents the previous local-grant proof.
 Admin UI, invitations, report access, collection, reports, and jobs remain subsequent
 work in the [plan](docs/plans/analytics-service.md). No live analytics are collected.

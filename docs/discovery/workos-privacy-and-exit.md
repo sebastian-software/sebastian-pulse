@@ -8,8 +8,10 @@ The selected direction is managed WorkOS AuthKit and Connect without a custom
 login domain. WorkOS owns users, organizations, memberships, roles, permissions,
 and provider sessions. Pulse retains stable product IDs and analytics data. The
 native Rust boundary, browser/MCP routes, and request-scoped RLS are fixture-tested.
-A staging project is available and real browser login passed locally; the real
-MCP client proof and production deployment remain pending. WorkOS is the sole authority for managed membership and permissions.
+A staging project is available. Real browser login, scoped public PKCE Connect
+MCP reads/writes, tenant denial, and token refresh passed against isolated local
+data on October 21, 2026; production deployment remains pending. WorkOS is the
+sole authority for managed membership and permissions.
 
 A provider exit therefore includes authorization data and configuration, not just
 user profiles. Export and reconcile organization membership, role definitions,

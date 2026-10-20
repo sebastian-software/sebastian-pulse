@@ -12,6 +12,9 @@ isolated PostgreSQL database is migrated for the real browser/MCP proof.
 Real AuthKit registration, verified email, PKCE callback, and the Pulse browser
 session passed locally on October 21, 2026. An authenticated user without an
 organization receives no product IDs or internal write access.
+The staging pilot organization, reader/admin roles, and two public Connect
+clients are configured. Real scoped MCP operations and token refresh passed
+against isolated local PostgreSQL data; see the evidence below.
 No production login or Bunny application is deployed.
 
 `src/auth/workos.rs` contains the native Rust SDK boundary. Its synthetic tests
@@ -76,9 +79,56 @@ requires `pulse:read` for any internal access, including a write-capable caller.
 For MCP, register explicit public read and read/write Connect applications using
 S256 and the actual client's loopback callback. Assign the corresponding permission
 scopes to each application. The requested resource must exactly match
-`<Pulse origin>/mcp`. Do not enable unrestricted callbacks or skip resource
-validation to accommodate a client. Dynamic registration is a separate proof:
+`<Pulse origin>/mcp`, and that URI must be registered under Connect's MCP resource
+indicators. Send `resource` in the authorization request, authorization-code token
+exchange, and refresh request. The live staging provider returned a non-resource
+audience when the code-exchange request omitted it. Keep Pulse's exact audience
+validation in place.
+Setting a default resource did not replace explicit resource binding for these
+manually registered clients. Never relax server audience validation to compensate.
+
+Request `offline_access` together with `pulse:read` (and `pulse:write` for the
+write client) to receive a refresh token. Keep authorization-code and refresh
+responses in client memory or the operating-system credential store, never logs.
+Do not enable unrestricted callbacks or skip resource validation to accommodate
+a client. Dynamic registration is a separate proof:
 WorkOS documents restricted scope assignment for dynamically registered clients.
+
+### Local MCP client setup
+
+The local proof uses Pulse at `http://127.0.0.1:3002`, a public S256 Connect client,
+and the observed callback `http://127.0.0.1:34627/callback/gNcopO_wGpkQ`. The callback
+path is client-generated and depends on the MCP URL; inspect the actual login
+request before registering a different URL or client version. The Connect client
+ID is public and differs from the AuthKit environment client ID used by Pulse.
+
+Codex CLI supports a pre-registered client with these settings. Replace the
+placeholder with the appropriate public Connect client ID:
+
+```toml
+mcp_oauth_credentials_store = "keyring"
+
+[mcp_servers.pulse]
+url = "http://127.0.0.1:3002/mcp"
+
+[mcp_servers.pulse.oauth]
+client_id = "<public Connect client ID>"
+callback_port = 34627
+```
+
+```sh
+codex mcp login pulse --scopes pulse:read,offline_access
+```
+
+Use the separately registered write client and request
+`pulse:read,pulse:write,offline_access` when writes are needed. A successful login
+alone does not prove usable MCP access: verify initialization, tool discovery,
+an allowed read, a denied write for the read client, and access after refresh.
+Codex completed a real read-client login, MCP initialization, and discovery of all
+13 tools through its app-server client. The operations and refresh evidence below
+comes from a separate minimal OAuth/HTTP MCP client; Codex tool invocation and
+automatic refresh remain separate checks. The temporary proof credential was removed from the keyring
+afterward; the example does not change existing client configuration. DCR and CIMD remain disabled in staging.
 
 ## Local proof and remaining rollout checks
 
@@ -108,11 +158,35 @@ cannot write organization bindings. A provider change requires an explicit mappi
 migration; email matches do not create links. Only the selected organization can
 be accessed by the current request; an organization-switch UI is not implemented.
 
+Live evidence on October 21, 2026, using the checked application revision
+`866f759aef5ea1a240abd5e1888648321dfd6e0f`:
+
+| Check | Result |
+| --- | --- |
+| AuthKit registration, verified email, callback, sealed browser session | Passed; organization-free sign-in has no internal access. |
+| Pilot admin membership and exact organization/workspace mapping | Passed; browser session resolves managed write access. |
+| Two public clients, S256 PKCE, no client secret | Passed for read and read/write scopes. |
+| Exact resource audience and selected pilot organization | Passed on code exchange and resource audience rechecked after refresh. |
+| MCP initialization and tool discovery | Passed for both clients. |
+| Codex app-server MCP client | OAuth login and authenticated discovery of all 13 tools passed. |
+| Own workspace read / other workspace denial | Passed for both clients. |
+| Read-only client acting for an admin user | Read succeeded; project creation denied. |
+| Read/write client acting for an admin user | Synthetic project created, updated, and deleted successfully. |
+| Refresh grant and subsequent MCP read | Passed for both clients with `offline_access` and explicit `resource`. |
+| Altered access-token signature | HTTP 401 for both clients. |
+
+Tokens stayed in memory during the OAuth/HTTP smoke checks. The isolated database
+contains synthetic workspaces; no live analytics data was read or written. These
+results establish this staging configuration, not production availability or
+compatibility with every MCP client.
+
+Remaining checks:
+
 - Real AuthKit sign-in and verified email passed locally. Check recovery delivery,
   session renewal, logout, account disabling, and concurrent refresh resilience.
-- Configure explicit Connect public read/read-write clients with the intended
-  client's observed callback, exact resource, and assigned permission scopes.
-  Verify a real internal MCP login and scoped read/write operations.
+- Exercise the intended MCP client's tool execution and automatic refresh in
+  addition to its login and discovery. Keep the observed callback, exact resource, and assigned
+  permission scopes; do not infer compatibility from a successful redirect.
 - Exercise inactive membership, permission removal, cross-organization requests,
   provider outage, and real signing-key rollover. Current automated checks use
   synthetic vendor contracts and do not establish these live outcomes. The staging
@@ -149,3 +223,5 @@ mappings in addition to identities; see the
 - [Connect token claims and server-side permissions](https://workos.com/docs/authkit/connect/token-claims)
 - [Roles and permissions](https://workos.com/docs/authkit/roles-and-permissions)
 - [MCP authentication](https://workos.com/docs/authkit/mcp)
+- [Connect token and refresh grants](https://workos.com/docs/reference/workos-connect/token)
+- [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp)

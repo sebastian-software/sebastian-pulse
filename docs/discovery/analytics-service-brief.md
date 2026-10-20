@@ -11,9 +11,9 @@ the technical evidence and the [implementation plan](../plans/analytics-service.
 for the selected Bunny Magic Containers / PlanetScale PS-5 starting configuration.
 The Package 1 local foundation is implemented in Rust in this repository.
 Workspace configuration persistence, RLS, protected HTTP, and scoped MCP are
-implemented. Native WorkOS routes are fixture-tested, and real browser login
-passed locally; the real MCP client proof is in progress. Collection and reporting are pending. The Frankfurt PS-5 HA
-cluster is provisioned; production roles, deployment, and login validation remain
+implemented. Native WorkOS routes are fixture-tested; real staging browser login
+and scoped MCP reads, writes, tenant denial, and refresh passed locally. Collection
+and reporting are pending. The Frankfurt PS-5 HA cluster is provisioned; production roles, deployment, and login validation remain
 in progress. See the README for commands and evidence.
 
 | Product decision | Owning record |
@@ -139,9 +139,10 @@ product data, stable ID mappings, and verified permission enforcement. The publi
 [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
 retains the earlier Rauthy reference; its production rollout is paused. WorkOS's
 standard terms include US processing and do not establish EU-only residency.
-Live login/MCP compatibility, identity and grant export/restore, and applicable
-production processing terms still need validation. The next design pass must also resolve live database
-compatibility, durable scheduled work, collection peaks and event volume, cost
+Staging browser login and explicit public PKCE MCP clients passed locally.
+Production login/MCP compatibility, identity and grant export/restore, and
+applicable production processing terms still need validation. The next design
+pass must also resolve live database compatibility, durable scheduled work, collection peaks and event volume, cost
 boundaries, access roles, actual region/purpose rules, recognition validation,
 CLI platform derivation and shared/CI permission handling, advertising integration
 details, and deletion propagation. Provider and bot-signal availability must be

@@ -6,8 +6,9 @@
   Workspace configuration, OIDC sessions, protected HTTP, and scoped MCP are
   implemented; W2 invitations/admin UI/report access and later packages remain
   pending. The selected identity target is managed WorkOS AuthKit/Connect; its
-  native SDK, browser/MCP routes, and managed RLS context are fixture-tested;
-  live provider/client proof and deployment remain pending.
+  native SDK, browser/MCP routes, and managed RLS context are fixture-tested.
+  Real staging browser login and scoped public PKCE MCP reads, writes, tenant
+  denial, and refresh passed locally; production deployment remains pending.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-5 ARM with HA, Frankfurt;
   one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB
@@ -73,9 +74,11 @@ request-scoped managed authorization in PostgreSQL are implemented and tested
 against synthetic provider contracts and real PostgreSQL/HTTP. Stable ID mappings
 do not copy WorkOS membership grants. A staging project and local callback are
 configured, and real AuthKit registration, verified email, callback, and browser
-session passed locally. Real MCP client proof, concurrent refresh, recovery, and
-production deployment remain pending. See the [WorkOS guide](../../ops/workos.md). The existing
-OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
+session passed locally. Explicit public PKCE Connect clients also passed MCP
+initialization/discovery, scoped reads/writes, cross-workspace denial, tampered
+token rejection, and refresh with isolated local data. Dynamic registration,
+concurrent browser refresh, recovery, and production deployment remain pending.
+See the [WorkOS guide](../../ops/workos.md). The existing OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
 
 ```mermaid
 flowchart LR
