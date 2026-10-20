@@ -17,7 +17,37 @@ use subtle::ConstantTimeEq;
 use uuid::Uuid;
 
 pub(super) fn router(state: Arc<AuthState>) -> Router {
-    let browser = Router::new()
+    let browser = configuration_router()
+        .route_layer(middleware::from_fn_with_state(state.clone(), browser_auth))
+        .with_state(state.workspaces.clone());
+    let mcp = crate::mcp::router(
+        state.workspaces.clone(),
+        state.provider.config().public_url[url::Position::BeforeHost..url::Position::AfterPort]
+            .to_owned(),
+        state
+            .provider
+            .config()
+            .public_url
+            .origin()
+            .ascii_serialization(),
+    )
+    .route_layer(middleware::from_fn_with_state(state.clone(), bearer_auth));
+    Router::new()
+        .route("/auth/login", get(login))
+        .route("/auth/callback", get(callback))
+        .route("/auth/session", get(session))
+        .route("/auth/logout", post(logout))
+        .route("/.well-known/oauth-protected-resource/mcp", get(metadata))
+        .route("/.well-known/oauth-protected-resource", get(metadata))
+        .with_state(state)
+        .merge(browser)
+        .merge(mcp)
+        .layer(axum::extract::DefaultBodyLimit::max(65_536))
+        .layer(middleware::from_fn(headers))
+}
+
+pub(super) fn configuration_router() -> Router<crate::workspaces::WorkspaceStore> {
+    Router::new()
         .route("/v1/workspaces/{workspace}", get(workspace))
         .route(
             "/v1/workspaces/{workspace}/projects",
@@ -43,34 +73,9 @@ pub(super) fn router(state: Arc<AuthState>) -> Router {
             "/v1/workspaces/{workspace}/recipients/{id}",
             put(update_recipient).delete(delete_recipient),
         )
-        .route_layer(middleware::from_fn_with_state(state.clone(), browser_auth));
-    let mcp = crate::mcp::router(
-        state.workspaces.clone(),
-        state.provider.config().public_url[url::Position::BeforeHost..url::Position::AfterPort]
-            .to_owned(),
-        state
-            .provider
-            .config()
-            .public_url
-            .origin()
-            .ascii_serialization(),
-    )
-    .route_layer(middleware::from_fn_with_state(state.clone(), bearer_auth));
-    Router::new()
-        .route("/auth/login", get(login))
-        .route("/auth/callback", get(callback))
-        .route("/auth/session", get(session))
-        .route("/auth/logout", post(logout))
-        .route("/.well-known/oauth-protected-resource/mcp", get(metadata))
-        .route("/.well-known/oauth-protected-resource", get(metadata))
-        .merge(browser)
-        .with_state(state)
-        .merge(mcp)
-        .layer(axum::extract::DefaultBodyLimit::max(65_536))
-        .layer(middleware::from_fn(headers))
 }
 
-async fn headers(request: Request, next: Next) -> Response {
+pub(super) async fn headers(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
     response
         .headers_mut()
@@ -311,6 +316,7 @@ async fn browser_auth(
     request.extensions_mut().insert(Caller {
         principal_id: session.principal_id,
         can_write: true,
+        workspace_id: None,
     });
     next.run(request).await
 }
@@ -392,6 +398,7 @@ async fn bearer_auth(
     request.extensions_mut().insert(Caller {
         principal_id: principal,
         can_write: verified.can_write,
+        workspace_id: None,
     });
     next.run(request).await
 }
@@ -430,54 +437,54 @@ fn result<T: serde::Serialize>(value: Result<T, WorkspaceError>) -> Response {
     }
 }
 async fn workspace(
-    State(s): State<Arc<AuthState>>,
+    State(s): State<crate::workspaces::WorkspaceStore>,
     axum::Extension(c): axum::Extension<Caller>,
     Path(w): Path<Uuid>,
 ) -> Response {
-    result(s.workspaces.workspace(c.principal_id, w).await)
+    result(s.for_caller(c).workspace(c.principal_id, w).await)
 }
 macro_rules! configuration_routes {
     ($list:ident,$create:ident,$update:ident,$delete:ident,$input:ty,$list_op:ident,$create_op:ident,$update_op:ident,$delete_op:ident) => {
         async fn $list(
-            State(s): State<Arc<AuthState>>,
+            State(s): State<crate::workspaces::WorkspaceStore>,
             axum::Extension(c): axum::Extension<Caller>,
             Path(w): Path<Uuid>,
             Query(p): Query<Page>,
         ) -> Response {
             result(
-                s.workspaces
+                s.for_caller(c)
                     .$list_op(c.principal_id, w, p.after, p.limit)
                     .await,
             )
         }
         async fn $create(
-            State(s): State<Arc<AuthState>>,
+            State(s): State<crate::workspaces::WorkspaceStore>,
             axum::Extension(c): axum::Extension<Caller>,
             Path(w): Path<Uuid>,
             Json(v): Json<$input>,
         ) -> Response {
-            result(s.workspaces.$create_op(c.principal_id, w, v).await)
+            result(s.for_caller(c).$create_op(c.principal_id, w, v).await)
         }
         async fn $update(
-            State(s): State<Arc<AuthState>>,
+            State(s): State<crate::workspaces::WorkspaceStore>,
             axum::Extension(c): axum::Extension<Caller>,
             Path((w, id)): Path<(Uuid, Uuid)>,
             Json(v): Json<Update<$input>>,
         ) -> Response {
             result(
-                s.workspaces
+                s.for_caller(c)
                     .$update_op(c.principal_id, w, id, v.expected_version, v.data)
                     .await,
             )
         }
         async fn $delete(
-            State(s): State<Arc<AuthState>>,
+            State(s): State<crate::workspaces::WorkspaceStore>,
             axum::Extension(c): axum::Extension<Caller>,
             Path((w, id)): Path<(Uuid, Uuid)>,
             Query(v): Query<Revision>,
         ) -> Response {
             result(
-                s.workspaces
+                s.for_caller(c)
                     .$delete_op(c.principal_id, w, id, v.expected_version)
                     .await,
             )

@@ -310,6 +310,7 @@ impl McpHandler {
         let (actor, _) = caller(&context)?;
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .workspace(actor, workspace_id)
             .await
             .map(WorkspaceOutput::from)
@@ -335,6 +336,7 @@ impl McpHandler {
             .transpose()?;
         let limit = page_limit(args.limit)?;
         self.store
+            .for_caller(caller_context(&context)?)
             .list_projects(actor, workspace_id, after, limit)
             .await
             .map(ProjectPageOutput::from)
@@ -360,6 +362,7 @@ impl McpHandler {
             .transpose()?;
         let limit = page_limit(args.limit)?;
         self.store
+            .for_caller(caller_context(&context)?)
             .list_goals(actor, workspace_id, after, limit)
             .await
             .map(GoalPageOutput::from)
@@ -385,6 +388,7 @@ impl McpHandler {
             .transpose()?;
         let limit = page_limit(args.limit)?;
         self.store
+            .for_caller(caller_context(&context)?)
             .list_recipients(actor, workspace_id, after, limit)
             .await
             .map(RecipientPageOutput::from)
@@ -394,7 +398,7 @@ impl McpHandler {
 
     #[tool(
         name = "projects_create",
-        description = "Create a project. Requires the mcp:write scope and admin membership in the workspace."
+        description = "Create a project. Requires write delegation and workspace write permission."
     )]
     async fn projects_create(
         &self,
@@ -409,6 +413,7 @@ impl McpHandler {
             kind: args.kind.into(),
         };
         self.store
+            .for_caller(caller_context(&context)?)
             .create_project(actor, workspace_id, input)
             .await
             .map(ProjectOutput::from)
@@ -418,7 +423,7 @@ impl McpHandler {
 
     #[tool(
         name = "projects_update",
-        description = "Update a project with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Update a project with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn projects_update(
         &self,
@@ -434,6 +439,7 @@ impl McpHandler {
             kind: args.kind.into(),
         };
         self.store
+            .for_caller(caller_context(&context)?)
             .update_project(actor, workspace_id, id, args.expected_version, input)
             .await
             .map(ProjectOutput::from)
@@ -443,7 +449,7 @@ impl McpHandler {
 
     #[tool(
         name = "projects_delete",
-        description = "Delete a project and its goals with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Delete a project and its goals with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn projects_delete(
         &self,
@@ -455,6 +461,7 @@ impl McpHandler {
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         let id = parse_uuid(&args.id, "id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .delete_project(actor, workspace_id, id, args.expected_version)
             .await
             .map(|()| Json(DeleteOutput { deleted: true }))
@@ -463,7 +470,7 @@ impl McpHandler {
 
     #[tool(
         name = "goals_create",
-        description = "Create a goal. Requires mcp:write and admin membership in the workspace."
+        description = "Create a goal. Requires write delegation and workspace write permission."
     )]
     async fn goals_create(
         &self,
@@ -479,6 +486,7 @@ impl McpHandler {
             event_name: args.event_name,
         };
         self.store
+            .for_caller(caller_context(&context)?)
             .create_goal(actor, workspace_id, input)
             .await
             .map(GoalOutput::from)
@@ -488,7 +496,7 @@ impl McpHandler {
 
     #[tool(
         name = "goals_update",
-        description = "Update a goal with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Update a goal with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn goals_update(
         &self,
@@ -505,6 +513,7 @@ impl McpHandler {
             event_name: args.event_name,
         };
         self.store
+            .for_caller(caller_context(&context)?)
             .update_goal(actor, workspace_id, id, args.expected_version, input)
             .await
             .map(GoalOutput::from)
@@ -514,7 +523,7 @@ impl McpHandler {
 
     #[tool(
         name = "goals_delete",
-        description = "Delete a goal with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Delete a goal with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn goals_delete(
         &self,
@@ -526,6 +535,7 @@ impl McpHandler {
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         let id = parse_uuid(&args.id, "id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .delete_goal(actor, workspace_id, id, args.expected_version)
             .await
             .map(|()| Json(DeleteOutput { deleted: true }))
@@ -534,7 +544,7 @@ impl McpHandler {
 
     #[tool(
         name = "recipients_create",
-        description = "Add a report recipient. Requires mcp:write and admin membership in the workspace."
+        description = "Add a report recipient. Requires write delegation and workspace write permission."
     )]
     async fn recipients_create(
         &self,
@@ -545,6 +555,7 @@ impl McpHandler {
         require_write(can_write)?;
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .create_recipient(actor, workspace_id, NewRecipient { email: args.email })
             .await
             .map(RecipientOutput::from)
@@ -554,7 +565,7 @@ impl McpHandler {
 
     #[tool(
         name = "recipients_update",
-        description = "Update a report recipient with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Update a report recipient with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn recipients_update(
         &self,
@@ -566,6 +577,7 @@ impl McpHandler {
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         let id = parse_uuid(&args.id, "id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .update_recipient(
                 actor,
                 workspace_id,
@@ -581,7 +593,7 @@ impl McpHandler {
 
     #[tool(
         name = "recipients_delete",
-        description = "Remove a report recipient with its expected version. Requires mcp:write and admin membership in the workspace."
+        description = "Remove a report recipient with its expected version. Requires write delegation and workspace write permission."
     )]
     async fn recipients_delete(
         &self,
@@ -593,6 +605,7 @@ impl McpHandler {
         let workspace_id = parse_uuid(&args.workspace_id, "workspace_id")?;
         let id = parse_uuid(&args.id, "id")?;
         self.store
+            .for_caller(caller_context(&context)?)
             .delete_recipient(actor, workspace_id, id, args.expected_version)
             .await
             .map(|()| Json(DeleteOutput { deleted: true }))
@@ -601,6 +614,11 @@ impl McpHandler {
 }
 
 fn caller(context: &RequestContext<RoleServer>) -> Result<(Uuid, bool), McpError> {
+    let caller = caller_context(context)?;
+    Ok((caller.principal_id, caller.can_write))
+}
+
+fn caller_context(context: &RequestContext<RoleServer>) -> Result<crate::auth::Caller, McpError> {
     let parts = context
         .extensions
         .get::<axum::http::request::Parts>()
@@ -611,7 +629,7 @@ fn caller(context: &RequestContext<RoleServer>) -> Result<(Uuid, bool), McpError
         .extensions
         .get::<crate::auth::Caller>()
         .ok_or_else(|| McpError::internal_error("authenticated caller context is missing", None))?;
-    Ok((caller.principal_id, caller.can_write))
+    Ok(*caller)
 }
 
 fn require_write(can_write: bool) -> Result<(), McpError> {
@@ -619,7 +637,7 @@ fn require_write(can_write: bool) -> Result<(), McpError> {
         Ok(())
     } else {
         Err(McpError::invalid_params(
-            "mcp:write scope is required",
+            "write delegation is required",
             None,
         ))
     }

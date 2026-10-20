@@ -15,9 +15,9 @@ deployment is complete.
 | 0005 | [Structured observations](0005-structured-observations.md) | accepted | Website/CLI collection and traffic classification pending. |
 | 0006 | [Privacy, consent, and recognition](0006-privacy-consent-and-recognition.md) | accepted | Product boundaries agreed; concrete policy and methods need validation before use. |
 | 0007 | [Data lifecycle and evidence](0007-data-lifecycle-and-evidence.md) | accepted | Local auth expiry/cleanup implemented; analytics retention, corrections, and restore proof pending. |
-| 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration HTTP/MCP and OIDC sessions exist; reports, admin UI, and live auth pending. |
+| 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration HTTP/MCP and sessions exist; WorkOS staging browser/MCP proof passed locally; reports, admin UI, and production auth pending. |
 | 0009 | [Advertising measurement](0009-advertising-measurement.md) | accepted | Attribution, provider access, and reporting integrations pending; exports remain P2. |
-| 0010 | [External identity and workspace grants](0010-external-identity-and-workspace-grants.md) | accepted | OIDC/OAuth and local grants implemented; provider operations moved to sebastian-auth; live validation pending. |
+| 0010 | [Managed WorkOS identity and permissions](0010-external-identity-and-workspace-grants.md) | accepted | Native SDK and managed RLS are fixture-tested; real staging browser login, scoped MCP reads/writes, tenant denial, and refresh passed locally; production deployment pending. |
 | 0011 | [Public Apache 2.0 repository](0011-public-apache-license.md) | accepted | Apache-2.0 LICENSE/NOTICE; GitHub visibility and CI are checked at publication. |
 | 0012 | [Sebastian Pulse product name](0012-sebastian-pulse-product-name.md) | accepted | Product, repository, Rust package/binary, image, and Compose names use Pulse; database contracts retain analytics terminology. |
 

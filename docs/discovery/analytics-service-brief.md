@@ -1,7 +1,7 @@
 # Analytics service: product brief
 
-Status: accepted product scope, 2026-10-20, including the initial workload
-and portability requirements.
+Status: accepted product scope, updated 2026-10-21, including the initial workload,
+portability requirements, and managed identity direction.
 This brief consolidates detailed requirements from discovery. The
 [ADR index](../adr/README.md) records the decisions and rationale behind this
 scope, starting with [scope and priorities](../adr/0004-product-scope-and-priorities.md).
@@ -10,9 +10,10 @@ See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)
 for the selected Bunny Magic Containers / PlanetScale PS-5 starting configuration.
 The Package 1 local foundation is implemented in Rust in this repository.
-Workspace configuration persistence, RLS, OIDC login, protected HTTP, and scoped
-MCP are implemented. Collection and reporting are pending. The Frankfurt PS-5 HA
-cluster is provisioned; production roles, deployment, and login validation remain
+Workspace configuration persistence, RLS, protected HTTP, and scoped MCP are
+implemented. Native WorkOS routes are fixture-tested; real staging browser login
+and scoped MCP reads, writes, tenant denial, and refresh passed locally. Collection
+and reporting are pending. The Frankfurt PS-5 HA cluster is provisioned; production roles, deployment, and login validation remain
 in progress. See the README for commands and evidence.
 
 | Product decision | Owning record |
@@ -130,15 +131,18 @@ practical through a standard container, conventional Postgres, portable event
 contracts, and a verified export path. Preserve existing public OSS Metrics
 contracts; the analytics service has its own repository and runtime.
 
-A separate maintained identity provider, including managed identity, is allowed
-under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). EU-operated identity is now the deployment requirement; self-hosted Rauthy is the
-validation candidate behind a standard OIDC/OAuth boundary. The public
+A separate managed provider is selected under
+[ADR 0010](../adr/0010-external-identity-and-workspace-grants.md): WorkOS AuthKit
+and Connect, using the default hosted login domain. WorkOS owns users,
+organizations, memberships, roles, permissions, and provider sessions. Pulse owns
+product data, stable ID mappings, and verified permission enforcement. The public
 [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
-owns provider operations independently; sebastian-pulse owns application
-sessions and access grants. Live login/MCP
-compatibility, identity export/restore, and all auth processing locations still
-need validation. The next design pass must also resolve live database
-compatibility, durable scheduled work, collection peaks and event volume, cost
+retains the earlier Rauthy reference; its production rollout is paused. WorkOS's
+standard terms include US processing and do not establish EU-only residency.
+Staging browser login and explicit public PKCE MCP clients passed locally.
+Production login/MCP compatibility, identity and grant export/restore, and
+applicable production processing terms still need validation. The next design
+pass must also resolve live database compatibility, durable scheduled work, collection peaks and event volume, cost
 boundaries, access roles, actual region/purpose rules, recognition validation,
 CLI platform derivation and shared/CI permission handling, advertising integration
 details, and deletion propagation. Provider and bot-signal availability must be
@@ -150,7 +154,7 @@ capabilities or user commitments.
 The product-level scope is confirmed. The technical assessment evaluates the
 preferred shape and alternatives against this brief, including the smaller launch
 workload, operating costs, portability, and remaining feasibility gaps.
-The local Rust Package 1 foundation is implemented. Live provider provisioning
-remains pending. Optional OIDC sessions and configuration HTTP/MCP transports
-are implemented; invitations, report access, collection, and reporting remain
+The local Rust Package 1 foundation is implemented. WorkOS staging is configured;
+production deployment remains pending. Native WorkOS sessions and configuration
+HTTP/MCP transports are fixture-tested; invitations, report access, collection, and reporting remain
 subsequent work. Accepted product scope is not implementation evidence.

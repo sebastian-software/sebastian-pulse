@@ -1,8 +1,9 @@
-//! Domain-owned workspace configuration operations shared by future HTTP and MCP adapters.
+//! Product-owned workspace configuration operations shared by HTTP and MCP.
 //!
 //! Actor UUIDs must come from a trusted, verified login integration, never a request
 //! parameter or an unverified email address. This module does not authenticate users
-//! or implement an OAuth authorization server. No public configuration routes exist yet.
+//! or implement an OAuth authorization server. Verified managed access is scoped
+//! to the current operation and never copied into persistent local membership grants.
 
 mod store;
 pub use store::WorkspaceStore;

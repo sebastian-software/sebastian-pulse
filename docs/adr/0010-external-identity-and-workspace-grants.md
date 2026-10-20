@@ -1,147 +1,152 @@
-# Delegate login and OAuth while owning analytics access grants
+# Delegate identity, organizations, and permissions to WorkOS
 
 - Status: accepted
 - Date: 2026-10-20
-- Updated: 2026-10-20
-- Change note: Adopt the Sebastian Pulse product and repository name; preserve the accepted service and licensing boundaries.
+- Updated: 2026-10-21
+- Change note: Validate managed WorkOS browser login and scoped public PKCE MCP reads, writes, tenant isolation, and refresh against isolated local data; retain separate production gates.
 
 ## Context
 
-Browser login and internal MCP require an identity provider and OAuth authorization
-server. Building one is outside this product's purpose. Identity processing in the
-United States is a material adoption barrier, including when contractual transfer
-safeguards are available. WorkOS AuthKit/Connect was assessed as a managed option
-without a custom login domain; its public terms include US processing and do not
-establish EU-only identity residency. See the [privacy and exit assessment](../discovery/workos-privacy-and-exit.md).
+Pulse needs browser login, internal MCP authorization, organization membership,
+and access management. Operating an authorization server adds security, recovery,
+mail, upgrades, and availability work that does not distinguish the analytics
+product. Rauthy was validated locally, but its deployment is no longer the chosen
+path. Prefer the intended WorkOS capabilities over rebuilding user management or
+maintaining a parallel source of permission grants.
+
+WorkOS includes US processing. Its public terms do not establish EU-only identity
+residency. The [privacy and exit assessment](../discovery/workos-privacy-and-exit.md)
+records the evidence and remaining production inputs. This choice does not imply
+that the vendor has been approved for every data class or customer deployment.
 
 ## Decision
 
-Keep the analytics application in Rust and delegate authentication and OAuth
-issuance to a maintained separate provider. Prioritize self-hosted **Rauthy** on
-Bunny in one EU region, with PostgreSQL and persistent cache storage. This is a
-deployment candidate requiring a real client smoke test, target-platform proof,
-and operating/processing terms; it is not an already deployed service. Do not
-provision WorkOS while this EU-operated direction is being validated. A managed
-EU alternative remains possible through the same boundary.
+Use managed **WorkOS AuthKit** for hosted login, verification, authentication
+methods, recovery, and session issuance/refresh/revocation. Start with the default
+WorkOS login domain, without a custom login domain. Use **WorkOS Connect** as the
+OAuth authorization server for internal MCP. Do not build or deploy a separate
+identity server or an OAuth completion broker for this integration.
 
-The separate public [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
-owns Rauthy configuration, client registration, independent CI/releases, Bunny
-operations, mail, backups, and provider recovery. This repository is
-`sebastian-pulse` and owns its OIDC adapter, browser sessions, MCP token
-validation, local identity links, and analytics access grants. Analytics releases
-must not redeploy the identity service. Keep the self-contained protocol tests
-here; the optional real-provider proof uses sebastian-auth's local fixture.
+WorkOS is the source of truth for users, organizations, memberships, roles, and
+permission mappings. Use fitting WorkOS features directly, through its official
+Rust SDK where available. SSO, MFA, invitations, Admin Portal, and later capabilities
+can use the vendor's supported flows when required; this decision does not enable
+paid add-ons or claim that every capability is already integrated.
 
-Use standard OIDC authorization code with PKCE S256 for browser login and standard
-OAuth discovery/JWKS and resource-bound JWTs for MCP. The adapter contains no
-WorkOS/Rauthy user API, organization model, or vendor SDK. Initial compatibility
-uses same-origin provider endpoints, RS256 signatures, exact configured issuer
-(including its path/trailing slash), and standard string/array audience claims.
-A future provider must satisfy this profile or supply a small boundary adapter.
-Do not implement a custom authorization server.
+The separate [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
+retains the previous Rauthy operating work as a reference. Pause its production
+rollout. Pulse's PostgreSQL and Bunny deployment remain independent of WorkOS;
+there is no reason to create a second authentication database for this direction.
 
-Use an owned, stable public identity domain for self-hosting, plus independently
-owned analytics/MCP/report URLs. Provider relocation behind the same issuer can
-preserve the public protocol; replacing the issuer requires fresh authentication.
-Passkeys are tied to their relying-party domain; no lossless credential/session
-migration is promised. Vendor-neutral protocols reduce application changes,
-not the need to verify a new provider's behavior.
+### Application data and authorization
 
-### Application identity and permissions
+Pulse retains stable internal principal and workspace UUIDs for product data,
+references, and audit. Map exact provider/environment user and organization IDs to
+those UUIDs at the integration boundary. Do not use an email address to merge
+accounts or inherit workspace access. An organization-to-workspace mapping binds
+product data; it does not create an independent membership or role authority.
 
-Keep principal UUIDs, workspace memberships, recipient configuration, and audit
-in application-owned PostgreSQL. Link exact `(issuer, subject)` identities to a
-principal through a trusted operator connection. Never automatically merge users
-by email or import provider organization roles as analytics permissions. A second
-provider identity can map to the same principal during an explicit migration;
-disabling/removing the old link revokes its local access. The runtime cannot
-create principals, identity links, workspaces, or membership grants.
+Use `pulse:read` and `pulse:write` permission slugs, with the read permission
+required for any internal access. Roles and their permission assignments live in
+WorkOS, not in hardcoded role-to-permission tables in Pulse. Pending and inactive
+memberships grant no access. Report-only access remains a separate permission
+boundary: adding a report recipient does not grant internal analytics access.
 
-Workspace admins can change configuration; readers can inspect it. Recipient
-configuration grants no internal access. Invites, named-recipient report grants,
-and recipient email changes remain later W2/report work. Requiring a verified
-email for the current internal browser login does not implement report access.
-
-Each configuration operation checks membership and sets transaction-local
-actor/workspace context. PostgreSQL RLS checks again with a restricted runtime
-role. This trusts the backend's verified actor assertion and does not protect
-against stolen database credentials. HTTP/MCP input never selects the actor.
-Version conflicts and minimal audit records are atomic with each mutation.
+Enforce verified caller, selected organization, and effective permissions in
+application operations and transaction-local PostgreSQL RLS. The existing local
+membership tables are the previous implementation, not the accepted authority for
+the new WorkOS path. Do not silently reuse them as a second source of grants.
+Do not bypass RLS to complete provider integration. The database still trusts the
+backend's verified actor/context assertion; it cannot protect against stolen
+runtime credentials that permit those assertions.
 
 ### Browser and MCP credentials
 
-Browser login uses one-use, browser-bound state and nonce, PKCE, signature,
-issuer/audience/expiry validation, and subject-matched userinfo with verified
-email. Store opaque session-token hashes, not provider access/refresh tokens.
-Use host-only HttpOnly SameSite=Lax cookies (Secure in HTTPS deployments), a
-30-minute absolute session lifetime, and Origin plus CSRF checks for mutations
-and logout. Logout removes the local credential; it does not sign out of the
-provider or invalidate every provider-issued token. Recheck the identity link
-and workspace grants on requests. Expired authentication state is denied even
-when cleanup or the provider is unavailable.
+Use AuthKit authorization code with S256 PKCE and one-use, browser-bound state.
+The official SDK exchanges the code and manages sealed provider sessions and
+refresh. Keep tokens out of URLs, logs, product responses, and Git. Use host-only
+HttpOnly Secure cookies in production, Origin plus CSRF checks for mutations,
+and provider session revocation on logout. A local cookie wrapper must not claim
+to revoke all already-issued access tokens immediately.
 
-MCP uses the official Rust SDK's stateless Streamable HTTP transport. Verify the
-bearer on every request: fixed trusted issuer/JWKS, signature, exact resource
-audience, expiration/not-before, required `mcp:read`, and optional `mcp:write`.
-Writes also require a current local admin membership. Cookies cannot substitute
-for an MCP bearer token. Validate canonical Host and any present Origin. Serve
-RFC 9728 protected-resource metadata and a discovery challenge, not a local token
-endpoint. Pin separate public read/read-write clients with S256 and configured
-scopes; leave dynamic registration disabled initially. Tool arguments are bounded
-configuration operations, never arbitrary SQL.
+MCP accepts user Connect tokens only: verify the fixed hosted issuer, trusted
+JWKS, signature, exact resource audience, expiration, and client scopes. Do not
+accept AuthKit browser session tokens or machine tokens as user MCP credentials.
+Connect scopes describe client delegation; they do not establish the user's
+permissions. After token validation, resolve the selected user's active WorkOS
+membership and union of WorkOS role permissions. Read/write access is the
+intersection of delegation and effective user permissions.
 
-Cache discovery/keys for five minutes; coalesce refreshes and impose a ten-second
-cooldown including failed requests. Unknown signing keys fail closed during the
-cooldown. Expired cache entries require successful discovery; a provider outage
-can therefore deny otherwise unexpired credentials after five minutes. This is
-a deliberate bounded-key policy, not offline or immediate provider-revocation
-support. Keep issued MCP access tokens short-lived; provider account disabling
-and external refresh-token revocation need their own operating checks.
+The initial adapter checks permissions directly against WorkOS on each request;
+errors deny access rather than falling back to local or stale grants. A bounded
+cache may be added only with an explicit revocation window and outage behavior.
+Keep Connect keys for five minutes with a ten-second refresh cooldown, including
+failed refreshes. Require refresh when the key cache expires; unknown keys fail
+closed. Use the existing stateless MCP transport and protected-resource metadata.
+Start with explicitly registered public read and read/write clients and S256;
+dynamic registration requires its own compatibility and scope proof.
 
-### Lifecycle and replacement
+### Portability and replacement
 
-Authentication attempts expire after ten minutes and are capped at 1,000 live
-attempts. The runtime cleans expired attempts/sessions on startup and every
-minute, and denies expired rows independently of cleanup. Backups/restores must
-reapply stored deadlines. Identity links remain until operator unlink/account
-deletion; they are the minimal access-control association. Set provider audit,
-account-deletion, backup, and configuration-audit retention before live release
-under [ADR 0007](0007-data-lifecycle-and-evidence.md).
+Contain WorkOS SDK models, API calls, session handling, and permission resolution
+in the auth integration module. Product operations consume internal identifiers
+and an authenticated access context. Do not impose a generic identity-provider
+interface that hides WorkOS features or recreates user/organization management.
 
-To replace the provider, restore application IDs/grants first, configure and test
-the new issuer and clients, and explicitly link the new verified identity to the
-existing principal using operator-controlled evidence or dual authentication.
-Do not use matching email alone as migration authority. Allow a bounded transition
-with separate links, then disable the old link/issuer and revoke old credentials.
-Keep rollback mappings until the transition is verified. Rehearse this process
-before a provider contract renewal and no later than the third operating year.
+A provider change includes **authorization migration**: export users,
+organizations, memberships, role definitions, permission assignments, and their
+internal ID mappings. Import equivalent grants into the new provider and verify
+that previously denied access stays denied. Preserve product UUIDs and audit
+references. Never migrate access based on a matching email alone. Test dual
+identity linking or a controlled recovery path while both providers are available.
 
-## Validation and remaining release gates
+Passwords, MFA factors, passkeys, sessions, and Connect authorizations have
+separate export limits. Assume fresh authentication and potentially credential
+re-enrollment. A default vendor login domain makes passkeys domain-bound; revisit
+that tradeoff before production passkey enrollment. Rehearse an export/replacement
+before the third operating year and before a material contract renewal.
 
-Tests exercise PostgreSQL role restrictions, one-use state, session revocation,
-HTTP CSRF and tenant isolation, MCP signature/issuer/resource/scope checks, local
-role revocation, signing-key rotation/cooldown, and replacement by a second OIDC
-issuer without changing principal UUIDs or workspace grants. Protocol fixtures
-are local test infrastructure, not an alternative production authorization server.
-Actual Rauthy/Codex evidence and commands belong in the [operating guide](../../ops/auth.md).
+## Implementation evidence and remaining work
 
-Rauthy's current resource-indicator documentation excludes upstream-brokered
-social login from processing the resource parameter. Do not claim that path works
-for MCP without a separate proof, and never relax audience validation to make it
-pass. Local password/passkey authentication is the initial proof path.
+The Rust WorkOS boundary implements SDK-based AuthKit PKCE, code exchange,
+sealed sessions, refresh/revocation, active membership and role-permission
+resolution, and resource-bound Connect validation. Synthetic tests exercise
+native API contracts, denied memberships, permission changes, scope intersection,
+session tampering, issuer/audience failures, and expiry.
 
-Before live release, verify the deployed provider and intended client, login and
-recovery/verified-email delivery, provider revocation, report-link/recipient
-protection, rate limits, backups plus keys and restoration, actual EU placement,
-and applicable processor/subprocessor terms. An EU runtime location alone does
-not prove that support, email, backups, or every subprocessor stays in the EU.
+Startup selects WorkOS when its complete configuration is present; legacy OIDC
+settings and WorkOS settings are mutually exclusive. Native browser and MCP routes
+share configuration operations using a verified, request-scoped access context.
+Migration 000004 binds provider IDs to stable product IDs. Organization bindings
+remain operator-managed; principal bindings are created only after managed access
+verification. These bindings contain no persistent membership grants. RLS consumes
+the transaction-local managed permission; the old local membership table cannot
+broaden managed requests. The previous OIDC/local-grant path remains available
+only as an explicitly selected legacy mode.
+
+Real PostgreSQL/HTTP tests exercise stable concurrent identity mapping, private
+binding tables, no implicit local grant, tenant and actor mismatch, stale local
+admin grants, pooled context isolation, native login state, CSRF, permission
+removal, provider outage, MCP scope intersection, and provider logout.
+
+A WorkOS staging project and the local callback are configured. Real registration,
+verified email, PKCE callback, and browser session passed locally on October 21,
+2026. Two public S256 Connect clients passed real MCP initialization, tool
+discovery, workspace reads, tenant denial, and token refresh against isolated local
+PostgreSQL data. Read-only delegation denied writes even for an admin member;
+read/write delegation allowed synthetic project create/update/delete. Tampered
+tokens were rejected. Resource binding was required in both token exchange and
+refresh requests. Dynamic client registration, concurrent browser refresh
+resilience, signing-key rollover against the real provider, production
+cookie/ingress configuration, deployment, and recovery remain completion gates.
+See the [WorkOS integration guide](../../ops/workos.md).
 
 ## References
 
+- [WorkOS Rust SDK](https://workos.com/docs/sdks/rust)
+- [AuthKit hosted UI](https://workos.com/docs/authkit/hosted-ui)
+- [AuthKit sessions](https://workos.com/docs/authkit/sessions)
+- [Roles and permissions](https://workos.com/docs/authkit/roles-and-permissions)
+- [Connect access token claims and server-side permission checks](https://workos.com/docs/authkit/connect/token-claims)
 - [Reporting and access](0008-proactive-reports-and-internal-mcp.md)
 - [Implementation plan](../plans/analytics-service.md)
-- [Auth integration assessment](../discovery/auth-integration-assessment.md)
-- [Rauthy resource indicators](https://sebadob.github.io/rauthy/work/resource_indicators.html)
-- [Rauthy persistent cache](https://sebadob.github.io/rauthy/config/ha.html)
-- [OIDC subject and standard claims](https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims)
-- [OAuth resource indicators](https://www.rfc-editor.org/rfc/rfc8707.html)

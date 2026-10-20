@@ -69,6 +69,36 @@ impl AuthStore {
         Self { pool }
     }
 
+    /// Resolve product IDs only after current managed permission verification.
+    /// Organization bindings are operator-managed and never inferred from email.
+    pub async fn workos_caller(
+        &self,
+        client_id: &str,
+        access: super::workos::Access,
+    ) -> Result<Option<super::Caller>, AuthStoreError> {
+        let workspace: Option<Uuid> =
+            sqlx::query_scalar("SELECT analytics.resolve_workos_workspace($1, $2)")
+                .bind(client_id)
+                .bind(&access.organization_id)
+                .fetch_one(&self.pool)
+                .await?;
+        let Some(workspace_id) = workspace else {
+            return Ok(None);
+        };
+        let principal: Option<Uuid> =
+            sqlx::query_scalar("SELECT analytics.resolve_workos_principal($1, $2, $3)")
+                .bind(client_id)
+                .bind(&access.user_id)
+                .bind(Uuid::new_v4())
+                .fetch_one(&self.pool)
+                .await?;
+        Ok(principal.map(|principal_id| super::Caller {
+            principal_id,
+            can_write: access.can_write,
+            workspace_id: Some(workspace_id),
+        }))
+    }
+
     pub async fn begin_login(
         &self,
         state_hash: &[u8; 32],

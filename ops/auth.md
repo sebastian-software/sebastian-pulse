@@ -1,4 +1,10 @@
-# Identity integration
+# Previous OIDC identity integration
+
+The selected target is now managed WorkOS AuthKit/Connect, including organization
+membership and permissions. See [ADR 0010](../docs/adr/0010-external-identity-and-workspace-grants.md)
+and the [WorkOS integration guide](workos.md). The commands and evidence below
+describe the existing OIDC/local-grant implementation and earlier Rauthy proof.
+Do not deploy Rauthy for the new WorkOS direction.
 
 Sebastian Pulse owns OIDC login, browser sessions, MCP token validation, and
 its PostgreSQL workspace/report grants. The separate public

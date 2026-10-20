@@ -2,8 +2,8 @@
 
 - Status: accepted
 - Date: 2026-10-20
-- Updated: 2026-10-20
-- Change note: Link the implemented configuration access boundary and keep authentication/report delivery gates explicit.
+- Updated: 2026-10-21
+- Change note: Record the successful local WorkOS browser/MCP proof and keep production authentication and report delivery gates explicit.
 
 ## Context
 
@@ -42,9 +42,12 @@ retention follow the [data lifecycle](0007-data-lifecycle-and-evidence.md).
 AI evidence must satisfy the [privacy decision](0006-privacy-consent-and-recognition.md).
 Captured text and model outputs do not grant permissions or control recipients
 or external writes. [ADR 0010](0010-external-identity-and-workspace-grants.md)
-defines the external identity and application-owned grant boundary; configuration
-operations and RLS exist without public auth routes. Model, mail and maintained
-auth integrations remain selections to validate during implementation; the [Rust backend](0003-rust-backend.md)
+defines the managed WorkOS identity and permission boundary. Existing configuration
+operations and RLS support WorkOS-managed authority as a request-scoped context;
+real WorkOS staging browser login and scoped MCP reads, writes, and refresh passed
+against isolated local data. Production authentication remains pending. The prior
+OIDC/local-grant path remains an explicitly selected legacy mode. Model and mail integrations
+remain selections to validate during implementation; the [Rust backend](0003-rust-backend.md)
 decision does not settle them.
 
 ## Consequences

@@ -5,7 +5,10 @@
 - Date: 2026-10-20. P1 implementation plan; the Rust Package 1 foundation exists.
   Workspace configuration, OIDC sessions, protected HTTP, and scoped MCP are
   implemented; W2 invitations/admin UI/report access and later packages remain
-  pending. Self-hosted EU Rauthy and live target setup are being validated.
+  pending. The selected identity target is managed WorkOS AuthKit/Connect; its
+  native SDK, browser/MCP routes, and managed RLS context are fixture-tested.
+  Real staging browser login and scoped public PKCE MCP reads, writes, tenant
+  denial, and refresh passed locally; production deployment remains pending.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-5 ARM with HA, Frankfurt;
   one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB
@@ -57,23 +60,25 @@ Keep browser SDK and UI code in TypeScript. Serve compiled admin/report assets
 from the Rust app rather than introducing a separate frontend host. Establish
 versioned wire contracts and verify generated types against actual JSON behavior.
 
-Keep domain-owned identities and workspace/report permissions in Postgres.
-Delegate login and OAuth to a maintained separate identity provider, including a
-managed provider, under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md).
-Use standard OIDC/OAuth and local opaque browser sessions; no provider organization
-model owns workspace permissions. Identity processing in the US is an adoption
-barrier, so validate self-hosted Rauthy on Bunny in one EU region with persistent
-cache storage and PostgreSQL. WorkOS without a custom login domain was assessed
-but is not being provisioned. Keep owned issuer and application URLs for the
-self-hosted direction. See the [auth assessment](../discovery/auth-integration-assessment.md)
-and [operating guide](../../ops/auth.md) for compatibility and release gates.
-Provider configuration, client registration, upgrades, deployment, mail, and
-backup/recovery belong to the separate public
-[sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth).
-Analytics owns its OIDC/session/MCP integration and local grants. The local
-provider fixture is started from sebastian-auth; normal protocol integration
-tests remain self-contained here. Do not implement a custom authorization server
-or treat the MCP SDK as user management.
+Keep stable product principal/workspace UUIDs and analytics data in Postgres.
+WorkOS owns users, organizations, memberships, roles, and permissions under
+[ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). Use native AuthKit
+sessions and Connect MCP authorization through the official Rust SDK, with the
+default hosted login domain. The integration boundary maps provider IDs and
+verified access to product IDs and transaction-local RLS context. Do not build
+parallel local grants or a replacement authorization server. The previous Rauthy
+rollout is paused; its separate repository remains a reference.
+
+The native WorkOS boundary, startup selection, browser/config/MCP routes, and
+request-scoped managed authorization in PostgreSQL are implemented and tested
+against synthetic provider contracts and real PostgreSQL/HTTP. Stable ID mappings
+do not copy WorkOS membership grants. A staging project and local callback are
+configured, and real AuthKit registration, verified email, callback, and browser
+session passed locally. Explicit public PKCE Connect clients also passed MCP
+initialization/discovery, scoped reads/writes, cross-workspace denial, tampered
+token rejection, and refresh with isolated local data. Dynamic registration,
+concurrent browser refresh, recovery, and production deployment remain pending.
+See the [WorkOS guide](../../ops/workos.md). The existing OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
 
 ```mermaid
 flowchart LR
@@ -119,7 +124,7 @@ client-endpoint, migration, and recovery proof when required.
 | Data group | Minimum model and invariant |
 | --- | --- |
 | Workspaces and projects | Explicit workspace boundary; a project belongs to exactly one workspace. |
-| Members and recipients | Domain-owned workspace grants; internal admin/reader access and report-only recipients are distinct. |
+| Members and recipients | WorkOS-managed organization membership and permissions; stable local workspace mapping; internal and report-only access remain distinct. |
 | Privacy policies and choices | Versioned operator/purpose policy and permitted processing; refusal is not an analytics identity. |
 | Recognition | Project-scoped account/browser/system pseudonyms; method and uncertainty are explicit. |
 | Events and exclusions | Stable event IDs, project/workspace, occurrence/receipt times, type, provenance, bounded properties. Original event content is unchanged; exclusions are separate records. |
@@ -273,7 +278,7 @@ export/restore, target deployment remain separate gates. A local Rauthy 0.37.2 /
 access, and refresh/resource preservation; see the operating guide.
 
 - Implement workspace/project/configuration models, invites and verified email
-  login, an internal admin shell, and domain-owned access grants.
+  login, an internal admin shell, and WorkOS-managed access grants.
 - Select and validate the maintained external identity integration, then integrate OAuth/MCP
   authorization, including resource-bound tokens and scoped tools. Use explicit
   client registration policy; enable compatibility paths only
