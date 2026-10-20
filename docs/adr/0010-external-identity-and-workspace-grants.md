@@ -129,8 +129,9 @@ binding tables, no implicit local grant, tenant and actor mismatch, stale local
 admin grants, pooled context isolation, native login state, CSRF, permission
 removal, provider outage, MCP scope intersection, and provider logout.
 
-A WorkOS staging project and the local callback are configured. Real browser/MCP
-smokes, concurrent refresh resilience, signing-key rollover against the real
+A WorkOS staging project and the local callback are configured. Real registration,
+verified email, PKCE callback, and browser session passed locally on October 21,
+2026. Real MCP client proof, concurrent refresh resilience, signing-key rollover against the real
 provider, production cookie/ingress configuration, deployment, and recovery remain
 completion gates. See the [WorkOS integration guide](../../ops/workos.md).
 

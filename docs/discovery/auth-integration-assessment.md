@@ -8,10 +8,10 @@ stable internal IDs, organization-to-workspace bindings, and enforcement of
 verified access. The default hosted login domain avoids a custom-domain dependency.
 
 A staging project, exact local callback, and short-lived server key are configured.
-The local service reaches the real hosted AuthKit login. Native SDK and PostgreSQL
+The local service completed real AuthKit registration, verified email, callback,
+and browser session. Native SDK and PostgreSQL
 tests cover browser sessions, permission changes, tenant isolation, and MCP token
-validation. A completed real user login, real MCP client, and production rollout
-remain separate evidence; see the [operating guide](../../ops/workos.md).
+validation. The real MCP client and production rollout remain separate evidence; see the [operating guide](../../ops/workos.md).
 
 ## Earlier EU-operated direction and standard boundary
 

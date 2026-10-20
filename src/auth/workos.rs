@@ -397,12 +397,17 @@ impl WorkosProvider {
             self.config.cookie_password.expose(),
         )?;
         let now = jsonwebtoken::get_current_timestamp();
+        let app_issuer = format!("{API_ORIGIN}/user_management/{}", self.config.client_id);
         if !session.authenticated
             || !user.email_verified
             || !valid_id(&user.id, "user_")
             || !valid_id(&session.session_id, "session_")
             || session.impersonator.is_some()
-            || current.iss.trim_end_matches('/') != API_ORIGIN
+            // Current sessions use a client-specific API issuer. Keep the
+            // documented legacy and configured AuthKit issuers exact as well.
+            || (current.iss.trim_end_matches('/') != API_ORIGIN
+                && current.iss.trim_end_matches('/') != app_issuer
+                && current.iss.trim_end_matches('/') != self.config.issuer())
             || current.sub != user.id
             || original.sub != current.sub
             || original.sid != current.sid
@@ -945,6 +950,41 @@ mod tests {
             "invalid tokens must not query WorkOS permissions"
         );
     }
+    #[tokio::test]
+    async fn sealed_sessions_accept_only_expected_workos_issuers() {
+        let (provider, fixture) = provider();
+        let now = jsonwebtoken::get_current_timestamp();
+        for (issuer, accepted) in [
+            (API_ORIGIN, true),
+            ("https://api.workos.com/", true),
+            (
+                "https://api.workos.com/user_management/client_fixture",
+                true,
+            ),
+            ("https://api.workos.com/user_management/client_other", false),
+            (provider.config.issuer(), true),
+            ("https://other.authkit.app", false),
+            ("https://api.workos.com.evil.invalid", false),
+        ] {
+            let sealed = workos::seal_session(
+                &SessionData {
+                    access_token: token(json!({
+                        "iss": issuer, "sub": "user_fixture", "sid": "session_fixture",
+                        "iat": now, "exp": now + 300,
+                    }))
+                    .into(),
+                    refresh_token: "refresh_fixture".into(),
+                    user: Some(serde_json::from_value(user()).unwrap()),
+                    impersonator: None,
+                },
+                provider.config.cookie_password.expose(),
+            )
+            .unwrap();
+            assert_eq!(provider.browser_identity(&sealed).await.is_ok(), accepted);
+        }
+        assert!(fixture.requests.lock().unwrap().is_empty());
+    }
+
     #[tokio::test]
     async fn native_login_refresh_and_revocation_use_the_official_sdk() {
         let (provider, fixture) = provider();

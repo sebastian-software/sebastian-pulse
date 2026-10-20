@@ -9,6 +9,9 @@ A WorkOS staging project, default hosted AuthKit domain, and exact local callbac
 `http://127.0.0.1:3002/auth/callback` are configured. A staging key with a 24-hour
 lifetime is stored in 1Password and has passed an HTTP 200 API check. A local
 isolated PostgreSQL database is migrated for the real browser/MCP proof.
+Real AuthKit registration, verified email, PKCE callback, and the Pulse browser
+session passed locally on October 21, 2026. An authenticated user without an
+organization receives no product IDs or internal write access.
 No production login or Bunny application is deployed.
 
 `src/auth/workos.rs` contains the native Rust SDK boundary. Its synthetic tests
@@ -23,6 +26,14 @@ Startup selects native WorkOS mode when all its settings are present and rejects
 mixed legacy OIDC configuration. Browser login/session/logout, configuration
 routes, and MCP use this native boundary. Existing OIDC/local-membership behavior
 remains available only through the explicit legacy settings.
+
+The live provider issued the browser session with
+`https://api.workos.com/user_management/<WORKOS_CLIENT_ID>` as its issuer.
+Validation accepts that exact client-specific issuer, the documented legacy API
+issuer, and the explicitly configured AuthKit issuer. Another application's
+client-specific issuer is rejected. Session tokens still originate only from
+authenticated code/refresh responses and locally authenticated encryption;
+this rule does not turn browser session JWTs into accepted MCP bearers.
 
 Migration 000004 adds private provider-ID bindings and a managed RLS context.
 Organization-to-workspace bindings are operator-managed; a principal mapping is
@@ -97,7 +108,7 @@ cannot write organization bindings. A provider change requires an explicit mappi
 migration; email matches do not create links. Only the selected organization can
 be accessed by the current request; an organization-switch UI is not implemented.
 
-- Complete the real AuthKit sign-in and verified email/recovery delivery. Check
+- Real AuthKit sign-in and verified email passed locally. Check recovery delivery,
   session renewal, logout, account disabling, and concurrent refresh resilience.
 - Configure explicit Connect public read/read-write clients with the intended
   client's observed callback, exact resource, and assigned permission scopes.

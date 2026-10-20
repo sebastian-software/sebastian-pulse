@@ -8,7 +8,8 @@
   OIDC login, protected configuration HTTP routes, and scoped MCP exist.
   WorkOS AuthKit/Connect is the selected managed identity and authorization
   target. Native AuthKit/Connect routes and request-scoped PostgreSQL RLS are
-  implemented and fixture-tested; a real provider/client proof is in progress.
+  implemented and fixture-tested; real AuthKit browser login passed locally.
+  The real MCP client proof and production deployment remain pending.
   WorkOS owns users, organizations, memberships, roles, and permission mappings; preserve stable product IDs and transaction-local
   RLS. The previous Rauthy rollout is paused. Live deployment, invitations,
   collection, report access, and browser UI remain pending.

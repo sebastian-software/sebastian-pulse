@@ -72,8 +72,9 @@ The native WorkOS boundary, startup selection, browser/config/MCP routes, and
 request-scoped managed authorization in PostgreSQL are implemented and tested
 against synthetic provider contracts and real PostgreSQL/HTTP. Stable ID mappings
 do not copy WorkOS membership grants. A staging project and local callback are
-configured; real browser/MCP proof, concurrent refresh, recovery, and production
-deployment remain pending. See the [WorkOS guide](../../ops/workos.md). The existing
+configured, and real AuthKit registration, verified email, callback, and browser
+session passed locally. Real MCP client proof, concurrent refresh, recovery, and
+production deployment remain pending. See the [WorkOS guide](../../ops/workos.md). The existing
 OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
 
 ```mermaid

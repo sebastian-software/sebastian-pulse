@@ -82,7 +82,7 @@ impl HttpTransport for Fixture {
                         assert_eq!(body["grant_type"], "refresh_token");
                         assert_eq!(body["refresh_token"], "refresh_fixture");
                     }
-                    json!({"user":user,"access_token":jwt(json!({"iss":"https://api.workos.com/","sub":"user_fixture","sid":"session_fixture","org_id":"org_fixture","iat":now,"exp":now+300})),"refresh_token":"refresh_fixture"})
+                    json!({"user":user,"access_token":jwt(json!({"iss":"https://api.workos.com/user_management/client_fixture","sub":"user_fixture","sid":"session_fixture","org_id":"org_fixture","iat":now,"exp":now+300})),"refresh_token":"refresh_fixture"})
                 }
                 "/user_management/organization_memberships" => {
                     assert!(

@@ -11,8 +11,8 @@ the technical evidence and the [implementation plan](../plans/analytics-service.
 for the selected Bunny Magic Containers / PlanetScale PS-5 starting configuration.
 The Package 1 local foundation is implemented in Rust in this repository.
 Workspace configuration persistence, RLS, protected HTTP, and scoped MCP are
-implemented. Native WorkOS routes are fixture-tested; the real browser/MCP proof
-is in progress. Collection and reporting are pending. The Frankfurt PS-5 HA
+implemented. Native WorkOS routes are fixture-tested, and real browser login
+passed locally; the real MCP client proof is in progress. Collection and reporting are pending. The Frankfurt PS-5 HA
 cluster is provisioned; production roles, deployment, and login validation remain
 in progress. See the README for commands and evidence.
 

@@ -17,7 +17,7 @@ deployment is complete.
 | 0007 | [Data lifecycle and evidence](0007-data-lifecycle-and-evidence.md) | accepted | Local auth expiry/cleanup implemented; analytics retention, corrections, and restore proof pending. |
 | 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration HTTP/MCP and OIDC sessions exist; reports, admin UI, and live auth pending. |
 | 0009 | [Advertising measurement](0009-advertising-measurement.md) | accepted | Attribution, provider access, and reporting integrations pending; exports remain P2. |
-| 0010 | [Managed WorkOS identity and permissions](0010-external-identity-and-workspace-grants.md) | accepted | Native SDK, browser/MCP routes, and managed RLS context are fixture-tested; live WorkOS proof and deployment pending. |
+| 0010 | [Managed WorkOS identity and permissions](0010-external-identity-and-workspace-grants.md) | accepted | Native SDK, browser/MCP routes, and managed RLS context are fixture-tested; real browser login passed locally; real MCP client proof and deployment pending. |
 | 0011 | [Public Apache 2.0 repository](0011-public-apache-license.md) | accepted | Apache-2.0 LICENSE/NOTICE; GitHub visibility and CI are checked at publication. |
 | 0012 | [Sebastian Pulse product name](0012-sebastian-pulse-product-name.md) | accepted | Product, repository, Rust package/binary, image, and Compose names use Pulse; database contracts retain analytics terminology. |
 
