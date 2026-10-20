@@ -36,9 +36,11 @@ infrastructure has been created.
 
 ## Architecture and portability contract
 
-Ship one Rust application image that serves collection, MCP, admin, and report
-routes and runs a background work loop. Use Axum/Tokio for HTTP and execution,
-SQLx for PostgreSQL, and the official `rmcp` SDK for MCP. Pin the toolchain,
+Ship one Rust application image for the shared service, serving collection, MCP,
+admin, and report routes and running a background work loop. Multiple customer workspaces use
+the same service and PostgreSQL database with application checks and RLS; do not
+provision a service or database per customer by default. Use Axum/Tokio for HTTP
+and execution, SQLx for PostgreSQL, and the official `rmcp` SDK for MCP. Pin the toolchain,
 dependencies, and images during W1-R. Build `linux/amd64` for Bunny; the
 database's ARM SKU is independent of the app image architecture.
 
@@ -92,6 +94,16 @@ locations in the new repository, not existing paths in OSS Metrics:
 Keep integration-specific code at actual external boundaries. Do not build a
 generic database abstraction that pretends every storage engine is equivalent.
 The supported initial exit target is another compatible PostgreSQL host.
+
+Preserve future dedicated customer deployments of the same image with a separate
+PostgreSQL database and deployment-specific configuration, under
+[ADR 0001](../adr/0001-portable-container-and-postgres.md). This remains an option
+to validate, not a delivered installation mode or another initial work package.
+Keep the same migrations and permission semantics; avoid customer code forks,
+mandatory connections to the primary installation, and advance implementation of
+fleet management, per-customer database routing, or another storage engine. A
+customer deployment or workspace transfer needs its own operating, identity,
+client-endpoint, migration, and recovery proof when required.
 
 ## Data and access contracts
 

@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Keep analytics in Rust and permit a separate identity provider under ADR 0010.
+- Change note: Keep the shared Rust/PostgreSQL deployment and allow future dedicated installations with the same image under ADR 0001.
 
 ## Context
 
@@ -20,13 +20,18 @@ this service, and the forecast alone does not establish a TypeScript bottleneck.
 
 At the language decision, the repository contained only a TypeScript foundation
 for startup, migrations, health checks, shutdown, and CI. That foundation is now
-ported to Rust. Collection, authentication, MCP, and reports remain later work.
-Changing languages before those capabilities existed kept the migration bounded.
+ported to Rust; configuration persistence, authentication, and MCP have since
+been added. Collection and reports remain later work. Changing languages before
+those capabilities existed kept the migration bounded.
 
 ## Decision
 
-Implement the analytics backend in Rust as one application image and one service
-process. A separate identity provider is permitted under
+Implement the analytics backend in Rust as one application image and one shared
+service process. Preserve the option of a future dedicated customer deployment
+using that same image and PostgreSQL, as scoped by
+[ADR 0001](0001-portable-container-and-postgres.md); this does not introduce
+customer-specific builds or a fleet of installations at launch. A separate
+identity provider is permitted under
 [ADR 0010](0010-external-identity-and-workspace-grants.md). Use these working library choices, with versions and compatibility
 verified and pinned during implementation:
 

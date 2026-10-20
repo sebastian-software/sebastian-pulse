@@ -4,6 +4,10 @@ A Rust backend for the analytics service described in the
 [product brief](docs/discovery/analytics-service-brief.md). The initial deployment
 target is Bunny Magic Containers with PlanetScale Postgres **PS-10 ARM, single
 node, Frankfurt**. The application uses standard HTTP and PostgreSQL protocols.
+The default is one shared service and database for multiple workspaces.
+[ADR 0001](docs/adr/0001-portable-container-and-postgres.md) preserves future
+dedicated customer installations using the same image and PostgreSQL; that mode
+is not yet validated or part of the initial delivery.
 
 The backend implements container boot, restricted database roles, SQL migrations,
 health checks, shutdown, CI, and workspace configuration persistence with Axum,
