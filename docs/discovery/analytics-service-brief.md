@@ -8,11 +8,12 @@ scope, starting with [scope and priorities](../adr/0004-product-scope-and-priori
 Keep this consolidation aligned when a living product decision changes.
 See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)
-for the selected Bunny Magic Containers / PlanetScale PS-10 starting configuration.
+for the selected Bunny Magic Containers / PlanetScale PS-5 starting configuration.
 The Package 1 local foundation is implemented in Rust in this repository.
-Workspace configuration persistence and RLS are implemented; login, public
-configuration transports, collection, and reporting are pending. Provider
-provisioning has not started. See the README for commands and evidence.
+Workspace configuration persistence, RLS, OIDC login, protected HTTP, and scoped
+MCP are implemented. Collection and reporting are pending. The Frankfurt PS-5 HA
+cluster is provisioned; production roles, deployment, and login validation remain
+in progress. See the README for commands and evidence.
 
 | Product decision | Owning record |
 | --- | --- |
@@ -118,7 +119,7 @@ deferred.
 
 The selected shape is one shared Rust backend and PostgreSQL database for
 multiple customer workspaces, initially on Bunny Magic Containers with
-PlanetScale Postgres PS-10 single node in Frankfurt. Workspace permissions and
+PlanetScale Postgres PS-5 HA in Frankfurt. Workspace permissions and
 PostgreSQL RLS enforce tenant isolation. Preserve the option of a future dedicated
 customer installation using the same container image and a separate PostgreSQL
 database, as scoped by [ADR 0001](../adr/0001-portable-container-and-postgres.md).

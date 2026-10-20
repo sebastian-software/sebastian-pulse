@@ -3,19 +3,19 @@
 Assessment date: 2026-10-20. For the accepted product scope, see the
 [product brief](analytics-service-brief.md). This is a source-backed design
 assessment and arithmetic model, not a deployed prototype or capacity benchmark.
-The initial PS-5 recommendation was replaced by the selected PS-10 starting
-plan on 2026-10-20. See the [implementation plan](../plans/analytics-service.md).
-No provider configuration, secrets, or subscriptions were changed.
+The selected starting plan is PS-5 HA, replacing the earlier PS-10 single-node
+target on 2026-10-20. The Frankfurt cluster has been provisioned; database roles
+and Bunny application deployment remain in progress. See the
+[implementation plan](../plans/analytics-service.md).
 
 ## Recommendation
 
-Start with one TypeScript application in Bunny Magic Containers, pinned to an
-EU region, and ordinary PlanetScale Postgres in Frankfurt. Use the selected PS-10
-single-node plan for the initial workload, subject to representative validation.
-Keep HTTP collection, MCP, admin pages, browser reports, and a background work
-loop in the same deployable application. Rust is also feasible in a container;
-TypeScript is the simpler initial recommendation for the shared browser/MCP
-surface, not a performance conclusion.
+Start with one shared Rust application in Bunny Magic Containers, pinned to
+Frankfurt, and ordinary PlanetScale Postgres PS-5 HA in Frankfurt, subject to
+representative workload validation. Keep HTTP collection, MCP, admin pages,
+browser reports, and a background work loop in the same deployable application.
+The Rust backend decision is recorded in [ADR 0003](../adr/0003-rust-backend.md);
+Rauthy identity runs independently in Sebastian Auth.
 
 The initial forecast is approximately 1,000 pageviews per day. Treat this as the
 portfolio total for calculation; the scope of that number has not been separately
@@ -106,16 +106,16 @@ small application and the initial workload, not the former ceiling.
 
 | Item | Monthly amount | Evidence or assumption |
 | --- | ---: | --- |
-| PlanetScale PS-10 single node | $14 | Selected Frankfurt ARM configuration: 1 GB RAM, 1/8 vCPU, 10 GB disk; live calculator verified. |
+| PlanetScale PS-5 HA | $15 | Selected Frankfurt ARM configuration: one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB disk and an initial 10-GB cap. Live dashboard verified. |
 | Bunny container and modest traffic | About $2-5 | Estimate using roughly 0.5-1 GB billed RAM and little CPU/traffic; actual overhead remains unmeasured. |
-| Core app + database | About $16-19 | Sum of the preceding items; no HA or additional paid environments. |
+| Pulse app + shared database | About $17-20 | Sum of the preceding items; includes database HA. The separate Auth container/cache and additional environments cost extra. |
 | AI and email | Provider-dependent | Separate model/region/token and mail-service choices remain open. A small launch reserve is useful but is not a vendor quote. |
 
 A provisional total planning envelope of **$25-40/month** is reasonable with a
 small AI/email reserve, subject to those choices. It excludes development time,
 paid ad spend, optional Shield plans, and any email/AI contract minimums that exceed
 the reserve. If 1,000/day means per website, recalculate using the site count.
-[PlanetScale calculator](https://planetscale.com/pricing?region=eu-central&engine=postgres&architecture=aarch64&replicas=0).
+[PlanetScale calculator](https://planetscale.com/pricing?region=eu-central&engine=postgres&architecture=aarch64&replicas=2).
 
 Bunny bills consumed CPU at $0.02/core-hour and used RAM at $0.005/GB-hour,
 with rounding and platform overhead. At 720 hours, 0.5-1 GB of billed RAM alone
@@ -124,11 +124,13 @@ Network charges and optional addresses/volumes are separate; durable state in
 Postgres avoids requiring a local data volume.
 [Container pricing](https://bunny.net/docs/magic-containers/pricing).
 
-The same Frankfurt PS-10 size with HA is $41 for primary plus two replicas,
-so choosing it adds about $27/month at this size. HA does not increase the
-primary's CPU/RAM capacity and does not make a one-replica application highly
-available. Single node is a deliberate low-cost start with no database replica
-failover; it is not a claim of uninterrupted collection.
+The earlier Frankfurt PS-10 single-node option was $14/month with 1 GB RAM and
+1/8 vCPU. PS-5 HA costs $1 more, with half that capacity per node and primary
+failover across three availability zones. PS-10 HA was quoted at $41/month.
+Replica CPU and RAM do not add to primary write capacity, and database HA does
+not make the single-instance Pulse or Auth application highly available. The
+starting selection is a cost/availability tradeoff, not a measured throughput
+guarantee.
 [Single-node plan and upgrades](https://planetscale.com/docs/postgres/cluster-configuration/single-node).
 
 ## Growth without an early platform change

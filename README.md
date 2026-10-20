@@ -2,8 +2,9 @@
 
 A Rust backend for the analytics service described in the
 [product brief](docs/discovery/analytics-service-brief.md). The initial deployment
-target is Bunny Magic Containers with PlanetScale Postgres **PS-10 ARM, single
-node, Frankfurt**. The application uses standard HTTP and PostgreSQL protocols.
+target is Bunny Magic Containers with PlanetScale Postgres **PS-5 ARM, HA
+(one primary and two replicas), Frankfurt**. The application uses standard HTTP
+and PostgreSQL protocols.
 The default is one shared service and database for multiple workspaces.
 [ADR 0001](docs/adr/0001-portable-container-and-postgres.md) preserves future
 dedicated customer installations using the same image and PostgreSQL; that mode
@@ -175,9 +176,9 @@ and close the pool within a 20-second deadline.
 
 Read [database operations](ops/database.md) for schema history and credentials,
 and [Bunny deployment](ops/bunny/README.md) for target settings and remaining
-live checks. Before provisioning PS-10, verify its PostgreSQL major and actual
-role/TLS behavior. Provider provisioning and the full export/restore rehearsal
-remain gates before live collection.
+live checks. The PS-5 HA cluster is provisioned with PostgreSQL 18.6; actual
+role/TLS behavior, Bunny deployment, and the full export/restore rehearsal remain
+gates before live collection.
 
 ## Optional OIDC authentication and configuration API
 

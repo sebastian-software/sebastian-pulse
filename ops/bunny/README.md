@@ -1,8 +1,9 @@
 # Bunny deployment target
 
-This is the deployment contract for a later provisioning step. No Bunny app,
-PlanetScale subscription, registry integration, or production credentials have
-been created by Package 1.
+This is the deployment contract for the initial live setup. The PlanetScale
+cluster `sebastian-pulse`, branch `main`, was provisioned on October 20, 2026.
+Bunny deployment and the real database/authentication path remain in progress;
+the local and CI checks alone do not establish production readiness.
 
 | Setting | Initial target |
 | --- | --- |
@@ -14,7 +15,7 @@ been created by Package 1.
 | Shutdown | SIGTERM, platform grace at least 25 seconds; app deadline 20 seconds. |
 | Storage | No persistent app volume; authoritative state belongs in PostgreSQL. |
 | Secrets | Runtime database URL/optional CA and, when enabled, the four AUTH_* settings; migration credentials in release runner only. |
-| Database | PlanetScale Postgres PS-10 ARM single node in Frankfurt; validate PostgreSQL 18 availability. |
+| Database | PlanetScale Postgres PS-5 ARM HA in Frankfurt, PostgreSQL 18.6; one primary and two replicas, 10 GB, $15/month. |
 
 Release sequence: verify CI → run the same image's migrator with a separate
 credential → start/update the app image → check readiness and release ID. The
@@ -24,11 +25,11 @@ prior tested image for compatible application rollback.
 
 Before marking the live W1 target proof complete:
 
-1. Establish the actual PS-10 roles/grants and verify certificate/hostname trust
+1. Establish the actual PS-5 roles/grants and verify certificate/hostname trust
    over the real Bunny-to-PlanetScale connection. Keep TLS verification enabled.
 2. Run a synthetic write/read and restricted-role negative checks there. Confirm
    the pool budget and the actual Postgres major, not only the SKU name.
-3. Configure the private registry pull path, owned domain, probes, region,
+3. Configure the public GHCR digest pull path, owned domain, probes, region,
    minimum instances, secret references, and observed shutdown grace.
 4. Record the deployed digest and verify health, reconnect, and release identity.
 

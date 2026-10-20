@@ -20,7 +20,7 @@ strings/arrays, RS256, PKCE S256, subject-bound verified-email userinfo, bounded
 same-origin discovery/JWKS, and scoped resource tokens. Tests use two independent
 OIDC issuers to preserve a principal's workspace grants through replacement.
 This is not a guarantee of credential or passkey migration. The local Rauthy/Codex proof passed browser login, native OAuth, MCP discovery and
-workspace access, plus refresh with the resource preserved. Bunny/PS-10 deployment
+workspace access, plus refresh with the resource preserved. Bunny/PS-5 deployment
 proof remains separate release evidence.
 
 Rauthy's resource-indicator support excludes upstream-brokered social sign-in

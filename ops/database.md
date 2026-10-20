@@ -12,7 +12,7 @@ The bootstrap under `ops/local/` is a **local fixture**, not a production setup
 script. On PlanetScale or another host, an operator must establish equivalent
 ownership and grants using that host's supported role-management path, with fresh
 secrets and a connection to the intended database. Confirm this path on the actual
-PS-10 instance before deployment; the local test is not proof of provider permissions.
+PS-5 instance before deployment; the local test is not proof of provider permissions.
 
 Required SQL relationships, with the actual login names substituted by an operator:
 
@@ -45,10 +45,11 @@ membership helper, assume the migrator role, or bypass RLS.
 
 The runtime can read only its own contextual membership and cannot change global
 principals, workspaces, or membership grants. Initial provisioning uses the trusted
-operator/migrator connection, outside the running service. No auth binding exists
-yet; do not map a claimed email or HTTP-supplied UUID to an operator grant. Login,
-invites, identity linkage, audited membership management, and live retention remain
-W2 work. Test fixtures provision synthetic UUID identities only.
+operator/migrator connection, outside the running service. OIDC login and exact
+`(issuer, subject)` identity links are implemented; do not map a claimed email or
+HTTP-supplied UUID to an operator grant. Invitations, audited membership
+management, and live analytics retention remain later work. Test fixtures
+provision synthetic UUID identities only.
 
 Configuration mutations use `WorkspaceStore` transactions, including their audit
 insert. Audit tables exclude recipient email and configuration contents; runtime

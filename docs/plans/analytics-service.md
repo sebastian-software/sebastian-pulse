@@ -7,8 +7,9 @@
   implemented; W2 invitations/admin UI/report access and later packages remain
   pending. Self-hosted EU Rauthy and live target setup are being validated.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
-- Selected database: PlanetScale Postgres PS-10 ARM, single node, Frankfurt;
-  1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
+- Selected database: PlanetScale Postgres PS-5 ARM with HA, Frankfurt;
+  one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB
+  storage with an initial 10-GB cap, currently $15/month before taxes.
 - Initial forecast: about 1,000 pageviews/day, assumed portfolio-wide for sizing.
 - Requirements: [confirmed brief](../discovery/analytics-service-brief.md).
 - Product decisions: [scope and priorities](../adr/0004-product-scope-and-priorities.md),
@@ -31,8 +32,10 @@ remain deployment inputs.
 
 The README describes implemented Rust commands. W1-R replaces the TypeScript
 foundation; the product packages below are not evidence of implemented features.
-Actual Bunny-to-PS-10 proof requires later provider provisioning. No paid
-infrastructure has been created.
+The PlanetScale cluster `sebastian-pulse`, branch `main`, was created on October
+20, 2026: PostgreSQL 18.6 on PS-5 HA in Frankfurt, with the primary and two
+replicas in separate availability zones. Logical databases, restricted roles,
+and actual Bunny-to-PlanetScale validation remain in progress.
 
 ## Architecture and portability contract
 
@@ -142,7 +145,7 @@ analysis requires explicit grants for every selected workspace.
 
 Start with a small total connection budget, including auth and worker usage;
 five runtime connections and one concurrent background job are proposed defaults
-to validate on PS-10. Apply query timeouts and pagination. Add indexes for actual
+to validate on PS-5. Apply query timeouts and pagination. Add indexes for actual
 tenant/time and journey access. Normal tables and bounded expiry jobs are enough
 at launch; introduce time partitioning or analytical storage when measurements
 justify it.
@@ -197,7 +200,7 @@ not for booting the local application.
 
 Evidence: clean boot and migrations, failed readiness with unavailable DB,
 successful readiness after reconnect, clean shutdown, and a synthetic write/read
-on the actual PS-10 configuration. `scripts/check.sh`,
+on the actual PS-5 configuration. `scripts/check.sh`,
 `scripts/test-integration.sh`, and `scripts/test-container.sh` exercise local
 contracts; live provider checks remain separate.
 
@@ -422,7 +425,7 @@ Requires: W1-W6 for the internal pilot; W7-W8 and their external release gates f
 full P1. Hosting and database exit rehearsals run before the first live-data pilot.
 
 - Exercise the provider-independent checks below with synthetic source data.
-- Deploy one replica in the selected Bunny EU region, use the actual PS-10
+- Deploy one replica in the selected Bunny EU region, use the actual PS-5
   runtime/migration roles, and start with one owned website/CLI.
 - Verify private routes cannot be shared through the CDN cache. Cache only public
   SDK/static assets. MCP streams, when used, need reconnects/heartbeats; avoid
@@ -460,11 +463,13 @@ passing tasks stand in for missing checks.
 
 ## Starting operating cost
 
-The selected PS-10 single-node database is currently $14/month in Frankfurt.
-Add an estimated $2-5 for a small always-running Bunny app and modest traffic:
-about $16-19/month for core hosting/database, before taxes. A provisional $25-40
-planning envelope includes a small AI/mail reserve; provider contract minimums,
-model usage, additional environments, or HA can change it. This is an estimate,
+The selected PS-5 HA database is currently $15/month in Frankfurt.
+Add an estimated $2-5 for a small always-running Pulse app and modest traffic:
+about $17-20/month for Pulse hosting/database, before taxes. The independently
+operated Auth container and its persistent cache add their own resource charges.
+A provisional $25-40 planning envelope includes a small AI/mail reserve; provider
+contract minimums, model usage, identity operations, or additional environments
+can change it. This is an estimate,
 not a verified runtime bill or an approved open-ended spending limit.
 
 ## Bunny deployment and day-two operation
@@ -546,7 +551,7 @@ later integration. The affected release package waits when:
 - An advertising app/account lacks real reporting access (that W7 adapter).
 - EU AI processing/no-training terms, mail delivery or named recipients are not
   established (affected W8 live delivery).
-- PS-10 measurements miss required behavior or cost assumptions change materially
+- PS-5 measurements miss required behavior or cost assumptions change materially
   (resize recommendation needs an explicit revised operating choice).
 
 P1 is complete only when the confirmed brief, not just the core pilot, is covered.

@@ -102,7 +102,7 @@ to determine the requested scopes. Local roles remain an additional check.
   read versus write scope, cross-workspace denial, forged signatures, revocation,
   failed key refresh/cooldown, and replacement by a second issuer.
 
-This proves a local provider/client integration. It does not prove Bunny-to-PS-10
+This proves a local provider/client integration. It does not prove Bunny-to-PS-5
 networking, production TLS/proxy behavior, mail recovery, MFA/passkeys, backup
 restoration, or every client. Rauthy's documented resource processing excludes
 upstream-brokered social login; test that path separately before offering it for

@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Keep one shared Rust service with PostgreSQL; preserve future dedicated customer deployments using the same image.
+- Change note: Select Frankfurt PS-5 HA for the shared Auth/Pulse cluster; keep portable, isolated logical databases and future dedicated deployments.
 
 ## Context
 
@@ -31,6 +31,20 @@ security, and restricted runtime credentials enforce the tenant boundary.
 Do not deploy a service or database per customer by default.
 
 Bunny Magic Containers and PlanetScale remain the initial hosting targets.
+Start with PlanetScale PostgreSQL 18.6 on PS-5 ARM HA in Frankfurt: one primary
+and two replicas in separate availability zones, 512 MB RAM and 1/16 vCPU per
+node, 10 GB storage with an initial 10-GB cap, and $15/month before taxes.
+This replaces the earlier PS-10 single-node target ($14/month). The small launch
+workload makes the lower primary capacity an acceptable starting hypothesis; the
+extra dollar buys database failover, not additional primary write capacity.
+
+Auth and Pulse may share this cluster with separate logical databases, owner
+roles, and credentials. The Pulse runtime remains restricted and separate from
+its migrator; Auth owns only its own database. Shared compute, contention, and
+cluster recovery are explicit dependencies. Database HA does not make either
+single-instance application highly available. Measure collection and reporting
+workloads before making a future capacity commitment.
+
 Keep event meaning, permissions, scheduled work, and reporting independent of
 provider SDKs so hosting and database providers can change without replacing
 business logic. Require export/restore evidence before live use. A separate,

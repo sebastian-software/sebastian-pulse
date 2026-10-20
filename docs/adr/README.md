@@ -8,7 +8,7 @@ deployment is complete.
 
 | ID | Decision | Status | Implementation |
 | --- | --- | --- | --- |
-| 0001 | [Shared portable container and PostgreSQL](0001-portable-container-and-postgres.md) | accepted | Shared Rust/PostgreSQL foundation and configuration/auth tenant checks exist; live and dedicated deployment validation pending. |
+| 0001 | [Shared portable container and PostgreSQL](0001-portable-container-and-postgres.md) | accepted | Shared Rust/PostgreSQL foundation and tenant checks exist; Frankfurt PS-5 HA cluster provisioned, application deployment and dedicated validation pending. |
 | 0002 | [Living decision records](0002-living-architecture-decisions.md) | accepted | This index, template, and repository instructions establish the convention. |
 | 0003 | [Rust backend](0003-rust-backend.md) | accepted | Rust foundation and configuration/auth/MCP exist; collection and live deployment pending. |
 | 0004 | [Product scope and priorities](0004-product-scope-and-priorities.md) | accepted | P1/P2/P3 scope agreed; configuration persistence exists, other product features pending. |
