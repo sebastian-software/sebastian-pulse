@@ -24,7 +24,7 @@
 - Discovery originated in OSS Metrics at `000db1f`; this repository owns the
   service brief, glossary, ADR, and implementation from Package 1 onward.
 
-The service repository is `sebastian-software/analytics-service` (private).
+The service repository is `sebastian-software/sebastian-analytics` (private).
 The existing public OSS Metrics API, Rybbit integration, and website remain a
 separate application. An owned service domain and production operator setup
 remain deployment inputs.
@@ -63,8 +63,14 @@ barrier, so validate self-hosted Rauthy on Bunny in one EU region with persisten
 cache storage and PostgreSQL. WorkOS without a custom login domain was assessed
 but is not being provisioned. Keep owned issuer and application URLs for the
 self-hosted direction. See the [auth assessment](../discovery/auth-integration-assessment.md)
-and [operating guide](../../ops/rauthy/README.md) for compatibility and release gates.
-Do not implement a custom authorization server or treat the MCP SDK as user management.
+and [operating guide](../../ops/auth.md) for compatibility and release gates.
+Provider configuration, client registration, upgrades, deployment, mail, and
+backup/recovery belong to the separate private
+[sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth).
+Analytics owns its OIDC/session/MCP integration and local grants. The local
+provider fixture is started from sebastian-auth; normal protocol integration
+tests remain self-contained here. Do not implement a custom authorization server
+or treat the MCP SDK as user management.
 
 ```mermaid
 flowchart LR

@@ -1,11 +1,4 @@
 //! Local protocol fixture tests; these do not substitute for an actual provider/client smoke.
-use analytics_service::{
-    app::Service,
-    auth::{AuthConfig, AuthService},
-    config::Environment,
-    database::create_pool,
-    migrations::{load_migrations, migrate},
-};
 use axum::{
     Json, Router,
     body::Bytes,
@@ -15,6 +8,13 @@ use axum::{
 };
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+use sebastian_analytics::{
+    app::Service,
+    auth::{AuthConfig, AuthService},
+    config::Environment,
+    database::create_pool,
+    migrations::{load_migrations, migrate},
+};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use sqlx::PgPool;
@@ -442,7 +442,7 @@ async fn mcp_checks_tokens_each_request_scopes_local_roles_and_revocation() {
 
 #[tokio::test]
 async fn cached_keys_rotate_and_failed_refreshes_are_rate_limited() {
-    use analytics_service::auth::oidc::OidcProvider;
+    use sebastian_analytics::auth::oidc::OidcProvider;
     let (p, server) = start_provider().await;
     let env = Environment::from([
         ("APP_ENV".into(), "test".into()),

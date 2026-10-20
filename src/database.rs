@@ -9,7 +9,7 @@ pub const POSTGRES_MAJOR: i32 = 18;
 
 pub fn create_pool(options: PgConnectOptions) -> PgPool {
     let options = options
-        .application_name("analytics-service")
+        .application_name("sebastian-analytics")
         .options([
             ("statement_timeout", "2000"),
             ("idle_in_transaction_session_timeout", "5000"),

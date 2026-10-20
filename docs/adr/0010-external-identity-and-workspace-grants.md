@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Make EU-operated identity the deployment direction, validate self-hosted Rauthy, and implement a replaceable OIDC/OAuth boundary.
+- Change note: Keep provider operations in sebastian-auth and application identity/access integration in sebastian-analytics.
 
 ## Context
 
@@ -23,6 +23,14 @@ deployment candidate requiring a real client smoke test, target-platform proof,
 and operating/processing terms; it is not an already deployed service. Do not
 provision WorkOS while this EU-operated direction is being validated. A managed
 EU alternative remains possible through the same boundary.
+
+The separate private [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
+owns Rauthy configuration, client registration, independent CI/releases, Bunny
+operations, mail, backups, and provider recovery. This repository is
+`sebastian-analytics` and owns its OIDC adapter, browser sessions, MCP token
+validation, local identity links, and analytics access grants. Analytics releases
+must not redeploy the identity service. Keep the self-contained protocol tests
+here; the optional real-provider proof uses sebastian-auth's local fixture.
 
 Use standard OIDC authorization code with PKCE S256 for browser login and standard
 OAuth discovery/JWKS and resource-bound JWTs for MCP. The adapter contains no
@@ -115,7 +123,7 @@ HTTP CSRF and tenant isolation, MCP signature/issuer/resource/scope checks, loca
 role revocation, signing-key rotation/cooldown, and replacement by a second OIDC
 issuer without changing principal UUIDs or workspace grants. Protocol fixtures
 are local test infrastructure, not an alternative production authorization server.
-Actual Rauthy/Codex evidence and commands belong in the [operating guide](../../ops/rauthy/README.md).
+Actual Rauthy/Codex evidence and commands belong in the [operating guide](../../ops/auth.md).
 
 Rauthy's current resource-indicator documentation excludes upstream-brokered
 social login from processing the resource parameter. Do not claim that path works

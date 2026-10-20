@@ -1,4 +1,4 @@
-use analytics_service::{
+use sebastian_analytics::{
     auth::{AuthStore, AuthStoreError, BrowserSession, LoginAttempt},
     database::create_pool,
     migrations::{load_migrations, migrate},

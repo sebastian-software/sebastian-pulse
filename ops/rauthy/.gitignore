@@ -1,7 +1,0 @@
-.env
-config.toml
-secrets.toml
-bootstrap/clients.json
-bootstrap/scopes.json
-data/
-backups/

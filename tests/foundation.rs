@@ -1,12 +1,12 @@
 use std::{net::SocketAddr, time::Duration};
 
-use analytics_service::{
+use axum::Router;
+use reqwest::{Client, Response};
+use sebastian_analytics::{
     app::Service,
     database::create_pool,
     migrations::{Migration, load_migrations, matches_history, migrate},
 };
-use axum::Router;
-use reqwest::{Client, Response};
 use sha2::{Digest, Sha256};
 use sqlx::{AssertSqlSafe, Row};
 use tokio::{net::TcpListener, sync::oneshot, task::JoinHandle, time::timeout};

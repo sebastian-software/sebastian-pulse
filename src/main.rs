@@ -1,4 +1,4 @@
-use analytics_service::{app::Service, config, database, log, migrations};
+use sebastian_analytics::{app::Service, config, database, log, migrations};
 use serde_json::json;
 use std::{collections::HashMap, future::IntoFuture, process::ExitCode, time::Duration};
 use tokio::{net::TcpListener, sync::oneshot, time::timeout};
@@ -91,9 +91,9 @@ async fn serve(env: &HashMap<String, String>) -> Result<(), ()> {
     let listener = TcpListener::bind((std::net::Ipv4Addr::UNSPECIFIED, config.port))
         .await
         .map_err(|_| log::event("server_failed", json!({"code":"BIND"})))?;
-    let auth = analytics_service::auth::AuthConfig::from_env(env)
+    let auth = sebastian_analytics::auth::AuthConfig::from_env(env)
         .map_err(|error| log::event("startup_failed", json!({"reason":error.to_string()})))?
-        .map(|config| analytics_service::auth::AuthService::new(pool.clone(), config))
+        .map(|config| sebastian_analytics::auth::AuthService::new(pool.clone(), config))
         .transpose()
         .map_err(|_| log::event("startup_failed", json!({"code":"AUTH_CONFIGURATION"})))?;
     let auth_cleanup = auth.as_ref().map(|auth| auth.start_cleanup());

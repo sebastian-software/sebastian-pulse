@@ -9,3 +9,6 @@ target/
 coverage/
 *.log
 .DS_Store
+
+# Preserve ignored operator files left by the extracted provider fixture.
+/ops/rauthy/

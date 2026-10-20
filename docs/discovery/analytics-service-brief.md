@@ -131,7 +131,10 @@ contracts; the analytics service has its own repository and runtime.
 
 A separate maintained identity provider, including managed identity, is allowed
 under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). EU-operated identity is now the deployment requirement; self-hosted Rauthy is the
-validation candidate behind a standard OIDC/OAuth boundary. Live login/MCP
+validation candidate behind a standard OIDC/OAuth boundary. The private
+[sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
+owns provider operations independently; sebastian-analytics owns application
+sessions and access grants. Live login/MCP
 compatibility, identity export/restore, and all auth processing locations still
 need validation. The next design pass must also resolve live database
 compatibility, durable scheduled work, collection peaks and event volume, cost

@@ -8,23 +8,23 @@ COPY migrations ./migrations
 COPY src ./src
 # Cargo validates declared test target paths even for a binary-only build.
 COPY tests ./tests
-RUN cargo build --locked --release --bin analytics-service
+RUN cargo build --locked --release --bin sebastian-analytics
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS runtime
 ARG RELEASE_ID=local
 ENV PORT=3000 RELEASE_ID=${RELEASE_ID}
-LABEL org.opencontainers.image.source="https://github.com/sebastian-software/analytics-service"
+LABEL org.opencontainers.image.source="https://github.com/sebastian-software/sebastian-analytics"
 LABEL org.opencontainers.image.revision="${RELEASE_ID}"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=builder /app/target/release/analytics-service /usr/local/bin/analytics-service
+COPY --from=builder /app/target/release/sebastian-analytics /usr/local/bin/sebastian-analytics
 COPY --chown=1000:1000 migrations ./migrations
 USER 1000:1000
 EXPOSE 3000
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["analytics-service", "healthcheck"]
-ENTRYPOINT ["analytics-service"]
+  CMD ["sebastian-analytics", "healthcheck"]
+ENTRYPOINT ["sebastian-analytics"]
 CMD ["serve"]
