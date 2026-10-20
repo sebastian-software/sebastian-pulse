@@ -13,7 +13,7 @@ been created by Package 1.
 | Health | `/health/live` for liveness, `/health/ready` for traffic readiness; no cached responses. |
 | Shutdown | SIGTERM, platform grace at least 25 seconds; app deadline 20 seconds. |
 | Storage | No persistent app volume; authoritative state belongs in PostgreSQL. |
-| Secrets | Runtime database URL and optional CA only for W1; migration credentials in release runner only. |
+| Secrets | Runtime database URL/optional CA and, when enabled, the four AUTH_* settings; migration credentials in release runner only. |
 | Database | PlanetScale Postgres PS-10 ARM single node in Frankfurt; validate PostgreSQL 18 availability. |
 
 Release sequence: verify CI → run the same image's migrator with a separate
@@ -41,3 +41,8 @@ References: [images](https://bunny.net/docs/magic-containers/deploy),
 [health](https://bunny.net/docs/magic-containers/health-checks),
 [shutdown](https://bunny.net/docs/magic-containers/graceful-shutdown),
 [release action](https://bunny.net/docs/magic-containers/deploy-with-github-actions).
+
+Identity runs as a separate maintained provider under [ADR 0010](../../docs/adr/0010-external-identity-and-workspace-grants.md).
+See the [Rauthy contract](../rauthy/README.md) for its separate persistent cache
+volume, dedicated database, EU-processing checks, and proven local MCP flow.
+The analytics application itself still needs no persistent volume.

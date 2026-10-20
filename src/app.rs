@@ -45,12 +45,18 @@ impl Service {
     }
 
     pub fn router(&self) -> Router {
+        self.router_with_auth(None)
+    }
+
+    pub fn router_with_auth(&self, auth: Option<crate::auth::AuthService>) -> Router {
+        let routes = auth.map(|auth| auth.router()).unwrap_or_default();
         Router::new()
             .route("/health/live", axum::routing::get(live))
             .route("/health/ready", axum::routing::get(ready))
             .fallback(|| async { (StatusCode::NOT_FOUND, Json(json!({"error":"not_found"}))) })
-            .layer(middleware::from_fn_with_state(self.state.clone(), guard))
             .with_state(self.state.clone())
+            .merge(routes)
+            .layer(middleware::from_fn_with_state(self.state.clone(), guard))
     }
 
     pub fn drain(&self) {

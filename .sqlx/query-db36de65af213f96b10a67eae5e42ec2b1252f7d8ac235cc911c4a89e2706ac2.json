@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM analytics.browser_sessions\n            WHERE token_hash = $1 AND expires_at <= clock_timestamp()\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "db36de65af213f96b10a67eae5e42ec2b1252f7d8ac235cc911c4a89e2706ac2"
+}

@@ -9,7 +9,13 @@ publish = false
 integration-tests = []
 
 [dependencies]
-axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio"] }
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
+base64 = "=0.22.1"
+jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["aws_lc_rs", "use_pem"] }
+openidconnect = { version = "=4.0.1", default-features = false }
+rmcp = { version = "=3.6.0", default-features = false, features = ["macros", "server", "transport-streamable-http-server"] }
+schemars = { version = "=1.2.1", features = ["uuid1"] }
+subtle = "=2.6.1"
 chrono = { version = "=0.4.45", default-features = false, features = ["clock", "std", "serde"] }
 reqwest = { version = "=0.13.5", default-features = false, features = ["json", "rustls"] }
 serde = { version = "=1.0.229", features = ["derive"] }
@@ -27,4 +33,12 @@ required-features = ["integration-tests"]
 
 [[test]]
 name = "workspaces"
+required-features = ["integration-tests"]
+
+[[test]]
+name = "auth_store"
+required-features = ["integration-tests"]
+
+[[test]]
+name = "authentication"
 required-features = ["integration-tests"]

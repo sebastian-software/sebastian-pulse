@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Record detail/summary retention, evidence integrity, and deletion propagation.
+- Change note: Set local login-attempt/session deadlines and cleanup while retaining separate provider and audit release gates.
 
 ## Context
 
@@ -21,12 +21,18 @@ shorten the periods:
 | --- | --- |
 | Detailed behavior and individual-journey report copies | 90 days. |
 | Condensed metrics and aggregate report snapshots | 24 months. |
+| Local browser login attempts | Ten minutes; one use, then removed. |
+| Local browser sessions | Thirty-minute absolute validity; removed on logout or expiry cleanup. |
 
 Reports must not preserve expired journeys or individual actor identifiers as
 long-lived copies. Derived data, report/model detail and job payloads follow
 the applicable lifecycle; snapshot stability does not override required deletion.
-Set separate purpose-specific periods for consent evidence, authentication and
-audit data before releasing those features; their periods are not selected here.
+Expired local authentication rows are denied independently of physical cleanup;
+cleanup runs on application startup and every minute while storage is available.
+Identity links remain only for the operator-managed access association. Set
+separate purpose-specific periods for consent evidence, provider accounts/logs,
+backups, and configuration audit before live release; those periods are not
+selected here. See [ADR 0010](0010-external-identity-and-workspace-grants.md).
 
 Recorded event contents are not freely editable through admin or MCP. Support
 recorded exclusions and targeted deletion as distinct actions. Recompute affected

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM analytics.browser_login_attempts WHERE expires_at <= clock_timestamp()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "ce1774d21f0712295a0109ef5fa248875e0ae60b85f4302baaa38fa49123983a"
+}

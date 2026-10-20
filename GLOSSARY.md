@@ -32,6 +32,12 @@ The isolated data and access boundary for a customer or an explicitly separated
 set of owned offerings. It can contain multiple websites and products.
 _Avoid_: Customer project, website
 
+**Analytics principal**:
+The account to which internal analytics access is granted. Multiple verified
+sign-in identities can belong to one principal; a principal is separate from a
+visitor observed by analytics.
+_Avoid_: Visitor, email address, identity-provider organization
+
 **Workspace membership**:
 An explicit internal read or administration grant for one analytics workspace.
 Membership in one workspace gives no access to another.

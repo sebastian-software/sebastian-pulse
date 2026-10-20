@@ -9,9 +9,13 @@ The backend implements container boot, restricted database roles, SQL migrations
 health checks, shutdown, CI, and workspace configuration persistence with Axum,
 Tokio, and SQLx. Projects, goals, and recipients have shared Rust operations with
 membership checks, PostgreSQL RLS, version conflicts, and atomic audit records.
-Login, public configuration routes, admin UI, MCP, collection, reports, and jobs
-remain subsequent work in the [plan](docs/plans/analytics-service.md). The server
-currently exposes only health routes; it collects no live analytics data.
+Optional standard OIDC browser login, local sessions, protected configuration HTTP
+routes, and scoped stateless MCP tools are implemented. Self-hosted Rauthy in the
+EU is the current identity deployment direction; see the [auth operating guide](ops/rauthy/README.md).
+Admin UI, invitations, report access, collection, reports, and jobs remain subsequent
+work in the [plan](docs/plans/analytics-service.md). No live analytics are collected.
+With auth settings absent, the server exposes only health routes; partial auth
+settings fail startup.
 
 ## Product and architecture decisions
 
@@ -83,7 +87,10 @@ The workspace suite additionally checks admin/reader/report-only boundaries,
 workspace isolation in both operations and raw SQL, composite project/goal foreign
 keys, stale and concurrent edits, minimal append-only audit records, atomic audit
 failure rollback, revocation, and transaction cleanup on one reused connection.
-It does not simulate a completed HTTP or MCP login.
+The auth suites add real PostgreSQL/HTTP/OIDC/MCP checks for one-use state, verified
+email, session/CSRF boundaries, token validation, scope and grant separation, key
+rotation, and provider replacement. Synthetic protocol fixtures do not prove a
+real provider/client login; that smoke test is recorded separately.
 
 The container check creates its own Compose project on random ports. It checks
 fresh migration/startup, UID 1000, credential separation, database outage/recovery,
@@ -162,3 +169,44 @@ and [Bunny deployment](ops/bunny/README.md) for target settings and remaining
 live checks. Before provisioning PS-10, verify its PostgreSQL major and actual
 role/TLS behavior. Provider provisioning and the full export/restore rehearsal
 remain gates before live collection.
+
+## Optional OIDC authentication and configuration API
+
+Set all four runtime settings together: `AUTH_ISSUER_URL`, `AUTH_PUBLIC_URL`,
+`AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`. The issuer is exact, including a provider's
+path/trailing slash. `AUTH_PUBLIC_URL` is the application's canonical origin;
+HTTPS is required except loopback in `APP_ENV=local` or `test`. The confidential
+browser client's registered callback is `<AUTH_PUBLIC_URL>/auth/callback`.
+OIDC metadata/token/userinfo/JWKS endpoints must share the issuer origin. The
+server never follows provider HTTP redirects or token-supplied URLs.
+
+`GET /auth/login` starts hosted login. `GET /auth/session` returns the locally
+linked principal and CSRF token; `POST /auth/logout` deletes the local session.
+Unlinked provider identities are denied, and no email-based account merge occurs.
+See the [identity ADR](docs/adr/0010-external-identity-and-workspace-grants.md) and
+[operator provisioning example](ops/rauthy/README.md) before enabling access.
+
+Authenticated browser configuration routes:
+
+| Route below `/v1/workspaces/{workspace}` | Methods |
+| --- | --- |
+| (workspace itself) | GET |
+| `/projects`, `/goals`, `/recipients` | GET, POST |
+| `/projects/{id}`, `/goals/{id}`, `/recipients/{id}` | PUT, DELETE |
+
+Lists accept `after` (UUID) and `limit` (1–100, default 50). POST accepts the
+corresponding `NewProject`, `NewGoal`, or `NewRecipient` JSON contract. PUT accepts
+`{"expected_version":1,"data":{...}}`; DELETE requires `?expected_version=1`.
+Writes and logout require the canonical `Origin` and `X-CSRF-Token` from the
+session endpoint. Cross-workspace/role denial is 403, stale edits 409, invalid
+input 400, and unavailable storage 503. These are internal authenticated routes;
+recipient configuration is not an invitation or report-access credential.
+
+`POST /mcp` uses stateless Streamable HTTP with a bearer token. Discover the
+issuer through `/.well-known/oauth-protected-resource/mcp`. Configure public
+OAuth clients with explicit `mcp:read` or `mcp:read mcp:write` scopes and exact
+resource `<AUTH_PUBLIC_URL>/mcp`. The 13 tools expose workspace details and bounded
+project/goal/recipient CRUD via the same operations as HTTP. Write scope and
+workspace admin membership are independent requirements. Nothing accepts an
+actor UUID or arbitrary SQL from a caller. The server provides no local OAuth
+issuance endpoint or dynamic client registration.

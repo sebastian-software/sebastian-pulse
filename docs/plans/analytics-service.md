@@ -3,8 +3,9 @@
 ## Status and planning basis
 
 - Date: 2026-10-20. P1 implementation plan; the Rust Package 1 foundation exists.
-  Workspace configuration persistence is implemented; W2 login/transports and
-  later product packages remain pending. Live target setup remains pending.
+  Workspace configuration, OIDC sessions, protected HTTP, and scoped MCP are
+  implemented; W2 invitations/admin UI/report access and later packages remain
+  pending. Self-hosted EU Rauthy and live target setup are being validated.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-10 ARM, single node, Frankfurt;
   1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
@@ -54,13 +55,14 @@ versioned wire contracts and verify generated types against actual JSON behavior
 Keep domain-owned identities and workspace/report permissions in Postgres.
 Delegate login and OAuth to a maintained separate identity provider, including a
 managed provider, under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md).
-Provider identity state may be external; assess its export and migration limits.
-The previous in-process Better Auth choice is withdrawn; a separate Better Auth
-service remains an option. Do not implement a custom authorization server or treat
-the MCP SDK as user management. Verify the actual intended MCP client. Prefer an
-owned issuer domain and preserve report URLs across hosting changes. WorkOS and
-Better Auth are candidates in the [auth assessment](../discovery/auth-integration-assessment.md);
-no provider is configured or provisioned.
+Use standard OIDC/OAuth and local opaque browser sessions; no provider organization
+model owns workspace permissions. Identity processing in the US is an adoption
+barrier, so validate self-hosted Rauthy on Bunny in one EU region with persistent
+cache storage and PostgreSQL. WorkOS without a custom login domain was assessed
+but is not being provisioned. Keep owned issuer and application URLs for the
+self-hosted direction. See the [auth assessment](../discovery/auth-integration-assessment.md)
+and [operating guide](../../ops/rauthy/README.md) for compatibility and release gates.
+Do not implement a custom authorization server or treat the MCP SDK as user management.
 
 ```mermaid
 flowchart LR
@@ -235,14 +237,19 @@ admin/reader memberships, transaction-local tenant context, PostgreSQL RLS, scop
 project/goal/recipient CRUD, UUID keyset pagination, revision conflicts, and atomic
 minimal audit records. Project deletion records each deleted goal. The restricted
 runtime cannot provision identities/workspaces/memberships or edit audit records.
-Operator bootstrap is separate; there is no public configuration transport yet.
+Operator bootstrap is separate. Optional OIDC browser routes and scoped stateless
+MCP expose these operations; no public analytics collection is enabled.
 
 Local evidence: 17 unit cases and 16 real-PostgreSQL integration cases (six foundation,
 ten workspace) pass, including raw RLS, cross-workspace operations, reused pooled
 connections after failure/cancellation, revoked membership, concurrent writers,
 and failed-audit rollback. SQLx metadata covers the static configuration queries.
-This does not establish HTTP/MCP auth, verified recipients, invites, report-link
-protection, or identity export/restore. Those gates below remain open.
+Auth tests add browser session/CSRF and MCP issuer/resource/scope validation,
+identity and membership revocation, key rotation, and provider replacement.
+Verified recipient grants, invites, report links, admin UI, provider recovery and
+export/restore, target deployment remain separate gates. A local Rauthy 0.37.2 / Codex CLI
+0.163.0 proof passed browser login, native OAuth, 13-tool discovery, workspace
+access, and refresh/resource preservation; see the operating guide.
 
 - Implement workspace/project/configuration models, invites and verified email
   login, an internal admin shell, and domain-owned access grants.

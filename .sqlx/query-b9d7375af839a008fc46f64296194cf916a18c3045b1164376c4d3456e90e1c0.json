@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT stored.principal_id, stored.csrf_token\n            FROM analytics.browser_sessions AS stored\n            WHERE stored.token_hash = $1\n              AND stored.expires_at > clock_timestamp()\n              AND analytics.resolve_principal(stored.issuer, stored.subject)\n                  = stored.principal_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "principal_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "analytics.browser_sessions",
+            "name": "principal_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "csrf_token",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.browser_sessions",
+            "name": "csrf_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "b9d7375af839a008fc46f64296194cf916a18c3045b1164376c4d3456e90e1c0"
+}

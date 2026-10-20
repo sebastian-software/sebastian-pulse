@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO analytics.browser_sessions\n                (token_hash, principal_id, issuer, subject, csrf_token, expires_at)\n            SELECT $3, identity.principal_id, $1, $2, $4,\n                   clock_timestamp() + interval '30 minutes'\n            FROM (SELECT analytics.resolve_principal($1, $2) AS principal_id) AS identity\n            WHERE identity.principal_id IS NOT NULL\n            RETURNING principal_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "principal_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "analytics.browser_sessions",
+            "name": "principal_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1999398c1b1eee2713dea1287d584d4e7cf63fc0216f7011feaa543d9abc2201"
+}
