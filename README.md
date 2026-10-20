@@ -1,15 +1,17 @@
 # Analytics service
 
-A Rust foundation for the analytics service described in the
+A Rust backend for the analytics service described in the
 [product brief](docs/discovery/analytics-service-brief.md). The initial deployment
 target is Bunny Magic Containers with PlanetScale Postgres **PS-10 ARM, single
 node, Frankfurt**. The application uses standard HTTP and PostgreSQL protocols.
 
-The foundation implements container boot, restricted database roles, SQL
-migrations, health checks, shutdown, and CI with Axum, Tokio, and SQLx. Collection,
-workspace isolation, authentication, MCP, reports, and background jobs remain
-subsequent packages in the [plan](docs/plans/analytics-service.md). No live
-analytics data is collected by this foundation.
+The backend implements container boot, restricted database roles, SQL migrations,
+health checks, shutdown, CI, and workspace configuration persistence with Axum,
+Tokio, and SQLx. Projects, goals, and recipients have shared Rust operations with
+membership checks, PostgreSQL RLS, version conflicts, and atomic audit records.
+Login, public configuration routes, admin UI, MCP, collection, reports, and jobs
+remain subsequent work in the [plan](docs/plans/analytics-service.md). The server
+currently exposes only health routes; it collects no live analytics data.
 
 ## Product and architecture decisions
 
@@ -77,6 +79,12 @@ command fails when its administrator URL is absent; ordinary unit checks need
 no database. Fixture URLs cannot redirect to another host/database through query
 parameters.
 
+The workspace suite additionally checks admin/reader/report-only boundaries,
+workspace isolation in both operations and raw SQL, composite project/goal foreign
+keys, stale and concurrent edits, minimal append-only audit records, atomic audit
+failure rollback, revocation, and transaction cleanup on one reused connection.
+It does not simulate a completed HTTP or MCP login.
+
 The container check creates its own Compose project on random ports. It checks
 fresh migration/startup, UID 1000, credential separation, database outage/recovery,
 clean SIGTERM, and sanitized logs, then removes only that generated project.
@@ -88,6 +96,22 @@ For an explicit running target:
 ```sh
 SMOKE_BASE_URL=http://127.0.0.1:3000 scripts/smoke.sh
 ```
+
+## Workspace configuration boundary
+
+`src/workspaces/` owns the operations future browser and MCP adapters will share.
+Internal admins can change configuration; readers can inspect it. A recipient
+record grants neither membership nor verified report access. Lists use UUID keyset
+pagination with 1–100 items per page. Mutations require the current positive
+revision, increment it, and record identifiers/action/revision in the same
+transaction. Deleting a project also audits its deleted goals.
+
+Actor UUIDs must come from a trusted authentication adapter, never a request field.
+Each operation sets actor and workspace context only for its database transaction;
+RLS checks the same membership again. The runtime cannot provision principals,
+workspaces, memberships, or edit/delete the audit log. Operator bootstrap and the
+remaining login/IdP work are described in [database operations](ops/database.md)
+and [ADR 0010](docs/adr/0010-external-identity-and-workspace-grants.md).
 
 ## SQL query metadata
 

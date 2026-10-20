@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Record report cadence, customer access, internal MCP/admin capabilities, and evidence quality.
+- Change note: Link the implemented configuration access boundary and keep authentication/report delivery gates explicit.
 
 ## Context
 
@@ -41,8 +41,10 @@ reads its stored results rather than regenerating model output. Corrections and
 retention follow the [data lifecycle](0007-data-lifecycle-and-evidence.md).
 AI evidence must satisfy the [privacy decision](0006-privacy-consent-and-recognition.md).
 Captured text and model outputs do not grant permissions or control recipients
-or external writes. Model, mail and maintained auth integrations remain selections
-to validate during implementation; the [Rust backend](0003-rust-backend.md)
+or external writes. [ADR 0010](0010-external-identity-and-workspace-grants.md)
+defines the external identity and application-owned grant boundary; configuration
+operations and RLS exist without public auth routes. Model, mail and maintained
+auth integrations remain selections to validate during implementation; the [Rust backend](0003-rust-backend.md)
 decision does not settle them.
 
 ## Consequences
