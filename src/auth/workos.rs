@@ -457,6 +457,8 @@ impl WorkosProvider {
         }
         let membership = &page.data[0];
         if membership.user_id != user
+            || membership.user.id != user
+            || !membership.user.email_verified
             || membership.organization_id != organization
             || membership.status.as_ref() != "active"
         {
@@ -870,16 +872,19 @@ mod tests {
         );
     }
     #[tokio::test]
-    async fn inactive_and_mismatched_memberships_cannot_grant_access() {
+    async fn inactive_unverified_and_mismatched_memberships_cannot_grant_access() {
         let (provider, fixture) = provider();
-        for mut data in [
-            membership("inactive", "admin", &[]),
-            membership("pending", "admin", &[]),
-            membership("active", "admin", &[]),
+        for (status, organization, user, verified) in [
+            ("inactive", "org_fixture", "user_fixture", true),
+            ("pending", "org_fixture", "user_fixture", true),
+            ("active", "org_other", "user_fixture", true),
+            ("active", "org_fixture", "user_other", true),
+            ("active", "org_fixture", "user_fixture", false),
         ] {
-            if data["status"] == "active" {
-                data["organization_id"] = json!("org_other");
-            }
+            let mut data = membership(status, "admin", &[]);
+            data["organization_id"] = json!(organization);
+            data["user"]["id"] = json!(user);
+            data["user"]["email_verified"] = json!(verified);
             fixture.respond(
                 200,
                 json!({"object":"list","data":[data],"list_metadata":{"before":null,"after":null}}),
