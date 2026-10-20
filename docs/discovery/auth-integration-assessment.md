@@ -24,6 +24,12 @@ distinguishes two registration paths:
   across the environment. Do not silently replace separate client read/write
   scopes with a user's workspace role; those are different restrictions.
 
+The first interoperability proof can use separate dashboard-created
+[public OAuth applications with PKCE](https://workos.com/docs/authkit/connect/oauth)
+for read-only and read/write access. This requires the intended MCP client to
+accept a configured client ID and send the resource parameter; do not assume
+all clients support that path.
+
 Configure the exact MCP resource URL and reject other audiences. Preserve local
 workspace/recipient grants rather than importing the provider's organization model.
 Verify email ownership through validated provider claims/API before binding report

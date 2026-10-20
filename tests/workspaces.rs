@@ -1246,3 +1246,35 @@ async fn audit_insert_failure_rolls_back_the_configuration_mutation() {
     })
     .await;
 }
+
+#[tokio::test]
+async fn final_live_revision_still_allows_audited_deletion_including_goals() {
+    with_fixture(|mut db| async move {
+        let actors = prepare(&mut db).await;
+        let pool = create_pool(db.runtime.clone());
+        let store = WorkspaceStore::new(pool.clone());
+        let item = store.create_project(actors.admin_a, actors.workspace_a, project("Boundary")).await.unwrap();
+        let child = store.create_goal(actors.admin_a, actors.workspace_a, goal(item.id, "Boundary goal", "boundary.goal")).await.unwrap();
+        let viewer = store.create_recipient(actors.admin_a, actors.workspace_a, recipient("boundary@example.com")).await.unwrap();
+        let penultimate = i32::MAX - 2;
+        // A trusted fixture jumps close to the boundary without billions of edits.
+        sqlx::query("UPDATE analytics.projects SET version = $1 WHERE workspace_id = $2 AND id = $3").bind(penultimate).bind(actors.workspace_a).bind(item.id).execute(&mut db.owner).await.unwrap();
+        sqlx::query("UPDATE analytics.goals SET version = $1 WHERE workspace_id = $2 AND id = $3").bind(penultimate).bind(actors.workspace_a).bind(child.id).execute(&mut db.owner).await.unwrap();
+        sqlx::query("UPDATE analytics.recipients SET version = $1 WHERE workspace_id = $2 AND id = $3").bind(penultimate).bind(actors.workspace_a).bind(viewer.id).execute(&mut db.owner).await.unwrap();
+        let item = store.update_project(actors.admin_a, actors.workspace_a, item.id, penultimate, project("Final project revision")).await.unwrap();
+        let child = store.update_goal(actors.admin_a, actors.workspace_a, child.id, penultimate, goal(item.id, "Final goal revision", "boundary.goal")).await.unwrap();
+        let viewer = store.update_recipient(actors.admin_a, actors.workspace_a, viewer.id, penultimate, recipient("final@example.com")).await.unwrap();
+        assert_eq!(item.version, i32::MAX - 1);
+        assert_eq!(child.version, i32::MAX - 1);
+        assert_eq!(viewer.version, i32::MAX - 1);
+        assert!(matches!(store.update_project(actors.admin_a, actors.workspace_a, item.id, item.version, project("Overflow")).await, Err(WorkspaceError::InvalidInput(_))));
+        assert!(matches!(store.update_goal(actors.admin_a, actors.workspace_a, child.id, child.version, goal(item.id, "Overflow", "overflow.goal")).await, Err(WorkspaceError::InvalidInput(_))));
+        assert!(matches!(store.update_recipient(actors.admin_a, actors.workspace_a, viewer.id, viewer.version, recipient("overflow@example.com")).await, Err(WorkspaceError::InvalidInput(_))));
+        store.delete_project(actors.admin_a, actors.workspace_a, item.id, item.version).await.unwrap();
+        store.delete_recipient(actors.admin_a, actors.workspace_a, viewer.id, viewer.version).await.unwrap();
+        let deleted: i64 = sqlx::query_scalar("SELECT count(*) FROM analytics.config_audit WHERE workspace_id = $1 AND action LIKE 'delete_%' AND entity_version = $2").bind(actors.workspace_a).bind(i32::MAX).fetch_one(&mut db.owner).await.unwrap();
+        assert_eq!(deleted, 3, "project, goal, and recipient deletions retain their final audit revision");
+        assert!(store.list_projects(actors.admin_a, actors.workspace_a, None, 100).await.unwrap().items.is_empty());
+        pool.close().await;
+    }).await;
+}
