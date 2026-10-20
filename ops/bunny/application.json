@@ -1,0 +1,128 @@
+{
+  "name": "sebastian-pulse",
+  "runtimeType": "shared",
+  "terminationGracePeriodSeconds": 30,
+  "autoScaling": {
+    "min": 1,
+    "max": 1
+  },
+  "regionSettings": {
+    "allowedRegionIds": [
+      "DE"
+    ],
+    "requiredRegionIds": [
+      "DE"
+    ],
+    "maxAllowedRegions": 1
+  },
+  "containerTemplates": [
+    {
+      "name": "pulse",
+      "imageName": "sebastian-pulse",
+      "imageNamespace": "sebastian-software",
+      "imageRegistryId": "1156",
+      "imageTag": "b4189a7d089b951c75b2556dbe5284c1656b235f",
+      "imageDigest": "sha256:88f81edb2e9dcf187d7f2c2b4b7d75ffcf8c1faa4e9f79c3548898a2a4edb2bc",
+      "imagePullPolicy": "ifNotPresent",
+      "entryPoint": {
+        "argumentsArray": [
+          "serve"
+        ]
+      },
+      "environmentVariables": [
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "DATABASE_TLS",
+          "value": "verify-full"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "$env:DATABASE_URL"
+        },
+        {
+          "name": "AUTH_ISSUER_URL",
+          "value": "https://auth.sebastian-software.de/auth/v1/"
+        },
+        {
+          "name": "AUTH_PUBLIC_URL",
+          "value": "https://pulse.sebastian-software.de"
+        },
+        {
+          "name": "AUTH_CLIENT_ID",
+          "value": "pulse-browser"
+        },
+        {
+          "name": "AUTH_CLIENT_SECRET",
+          "value": "$env:AUTH_CLIENT_SECRET"
+        }
+      ],
+      "endpoints": [
+        {
+          "displayName": "https",
+          "cdn": {
+            "isSslEnabled": false,
+            "portMappings": [
+              {
+                "containerPort": 3000
+              }
+            ]
+          }
+        }
+      ],
+      "probes": {
+        "startup": {
+          "httpGet": {
+            "request": {
+              "path": "/health/ready",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 24,
+          "initialDelaySeconds": 5
+        },
+        "readiness": {
+          "httpGet": {
+            "request": {
+              "path": "/health/ready",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 3,
+          "initialDelaySeconds": 5
+        },
+        "liveness": {
+          "httpGet": {
+            "request": {
+              "path": "/health/live",
+              "portNumber": 3000
+            },
+            "response": {
+              "expectedStatusCode": "ok"
+            }
+          },
+          "periodSeconds": 10,
+          "timeoutSeconds": 5,
+          "failureThreshold": 6,
+          "initialDelaySeconds": 5
+        }
+      }
+    }
+  ]
+}

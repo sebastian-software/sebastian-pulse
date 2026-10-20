@@ -47,3 +47,24 @@ Identity runs as a separate maintained provider under [ADR 0010](../../docs/adr/
 See the [Rauthy contract](https://github.com/sebastian-software/sebastian-auth/blob/main/ops/bunny/README.md) for its separate persistent cache
 volume, dedicated database, EU-processing checks, and proven local MCP flow.
 The analytics application itself still needs no persistent volume.
+
+## Initial application manifest
+
+[`application.json`](application.json) pins the tested public GHCR image from
+`b4189a7d089b951c75b2556dbe5284c1656b235f` by digest. It restricts deployment to
+Frankfurt (`DE`), one running instance, and a 30-second shutdown grace. Readiness
+uses `/health/ready`; liveness uses `/health/live`. PostgreSQL TLS verification
+and the exact production OIDC issuer and public origin are explicit.
+
+[`env.production.template`](env.production.template) contains only 1Password
+references. Resolve the two `$env:NAME` runtime inputs in memory before sending
+the manifest to the Bunny API. `BUNNY_API_KEY` is an operator credential and must
+never enter the container environment. Migration credentials are deliberately
+absent. Run the pinned image's `migrate` command separately with the migration
+credential before deploying the app.
+
+Creating the app does not finish the rollout. Configure the assigned pull zone
+with caching disabled for every current route, EU-only routing, the owned
+`pulse.sebastian-software.de` hostname, forwarded Host, and forced HTTPS before
+starting it. Prove readiness and the real login/session path over the owned
+origin; a valid manifest does not establish those behaviors.
