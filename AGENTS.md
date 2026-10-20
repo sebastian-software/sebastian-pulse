@@ -6,7 +6,7 @@
 - The backend foundation is Rust (Axum/Tokio/SQLx); browser SDK/UI code will
   remain TypeScript. Workspace configuration persistence, RLS, optional standard
   OIDC login, protected configuration HTTP routes, and scoped MCP exist.
-  Rauthy operations live in the separate private
+  Rauthy operations live in the separate public
   `sebastian-software/sebastian-auth` repository; this app owns OIDC integration
   and workspace grants. Self-hosted EU Rauthy is being validated. Live deployment,
   invitations, collection, report access, and browser UI remain pending.

@@ -18,6 +18,7 @@ deployment is complete.
 | 0008 | [Proactive reports and internal MCP](0008-proactive-reports-and-internal-mcp.md) | accepted | Configuration HTTP/MCP and OIDC sessions exist; reports, admin UI, and live auth pending. |
 | 0009 | [Advertising measurement](0009-advertising-measurement.md) | accepted | Attribution, provider access, and reporting integrations pending; exports remain P2. |
 | 0010 | [External identity and workspace grants](0010-external-identity-and-workspace-grants.md) | accepted | OIDC/OAuth and local grants implemented; provider operations moved to sebastian-auth; live validation pending. |
+| 0011 | [Public Apache 2.0 repository](0011-public-apache-license.md) | accepted | Apache-2.0 LICENSE/NOTICE; GitHub visibility and CI are checked at publication. |
 
 Follow [ADR 0002](0002-living-architecture-decisions.md) when creating or updating
 a record. Start with the [template](template.md), assign the next unused

@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Keep provider operations in sebastian-auth and application identity/access integration in sebastian-analytics.
+- Change note: Update public repository references while preserving provider and application access boundaries.
 
 ## Context
 
@@ -24,7 +24,7 @@ and operating/processing terms; it is not an already deployed service. Do not
 provision WorkOS while this EU-operated direction is being validated. A managed
 EU alternative remains possible through the same boundary.
 
-The separate private [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
+The separate public [sebastian-auth repository](https://github.com/sebastian-software/sebastian-auth)
 owns Rauthy configuration, client registration, independent CI/releases, Bunny
 operations, mail, backups, and provider recovery. This repository is
 `sebastian-analytics` and owns its OIDC adapter, browser sessions, MCP token

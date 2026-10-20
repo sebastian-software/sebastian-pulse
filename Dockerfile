@@ -15,12 +15,14 @@ ARG RELEASE_ID=local
 ENV PORT=3000 RELEASE_ID=${RELEASE_ID}
 LABEL org.opencontainers.image.source="https://github.com/sebastian-software/sebastian-analytics"
 LABEL org.opencontainers.image.revision="${RELEASE_ID}"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=builder /app/target/release/sebastian-analytics /usr/local/bin/sebastian-analytics
 COPY --chown=1000:1000 migrations ./migrations
+COPY LICENSE NOTICE /usr/share/licenses/sebastian-analytics/
 USER 1000:1000
 EXPOSE 3000
 STOPSIGNAL SIGTERM

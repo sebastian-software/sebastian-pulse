@@ -218,3 +218,8 @@ project/goal/recipient CRUD via the same operations as HTTP. Write scope and
 workspace admin membership are independent requirements. Nothing accepts an
 actor UUID or arbitrary SQL from a caller. The server provides no local OAuth
 issuance endpoint or dynamic client registration.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
+Copyright 2026 Sebastian Software GmbH. See [NOTICE](NOTICE).
