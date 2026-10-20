@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Port the foundation to Rust, preserving the existing SQL ledger and adding offline query checks.
+- Change note: Keep analytics in Rust and permit a separate identity provider under ADR 0010.
 
 ## Context
 
@@ -25,8 +25,9 @@ Changing languages before those capabilities existed kept the migration bounded.
 
 ## Decision
 
-Implement the complete backend in Rust as one application image and one service
-process. Use these working library choices, with versions and compatibility
+Implement the analytics backend in Rust as one application image and one service
+process. A separate identity provider is permitted under
+[ADR 0010](0010-external-identity-and-workspace-grants.md). Use these working library choices, with versions and compatibility
 verified and pinned during implementation:
 
 | Responsibility | Choice |
@@ -52,11 +53,13 @@ Use versioned wire contracts between Rust and browser code. Select type/schema
 generation during implementation and verify that generated types match the
 actual JSON representation, including large integers, decimals, and nullability.
 
-Authentication and MCP authorization need a maintained solution compatible with
-the Rust backend. The earlier Better Auth working choice no longer applies.
-Keep domain-owned workspace/report grants and the owned issuer domain; do not
-implement a custom OAuth authorization server. Record the auth selection before
-shipping the affected capability. The MCP SDK alone is not user management.
+Delegate login and OAuth authorization-server behavior to a maintained identity
+provider, which may be managed or a separate service. The earlier in-process
+Better Auth working choice no longer applies; a separate Better Auth service is
+not excluded by the Rust language choice. Keep domain-owned workspace/report
+grants; the [identity decision](0010-external-identity-and-workspace-grants.md)
+owns this boundary. Record and validate the provider before shipping auth. The
+MCP SDK alone is not user management.
 
 ## Consequences
 

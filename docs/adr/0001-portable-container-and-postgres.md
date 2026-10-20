@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-20
-- Change note: Implement the local Rust foundation; live provider validation remains pending.
+- Change note: Keep the analytics container portable while permitting a separate identity provider.
 
 ## Context
 
@@ -17,7 +17,9 @@ Run the analytics service as one long-lived container application backed by
 ordinary PostgreSQL, initially on Bunny Magic Containers and PlanetScale.
 Keep event meaning, permissions, scheduled work, and reporting independent of
 provider SDKs so hosting and database providers can change without replacing
-business logic. Require export/restore evidence before live use.
+business logic. Require export/restore evidence before live use. A separate, including managed,
+identity provider is allowed under [ADR 0010](0010-external-identity-and-workspace-grants.md);
+its portability and data-location limits need separate validation.
 
 [ADR 0003](0003-rust-backend.md) selects Rust for the backend within this deployment
 boundary. The [implementation plan](../plans/analytics-service.md) owns starting

@@ -32,6 +32,16 @@ The isolated data and access boundary for a customer or an explicitly separated
 set of owned offerings. It can contain multiple websites and products.
 _Avoid_: Customer project, website
 
+**Workspace membership**:
+An explicit internal read or administration grant for one analytics workspace.
+Membership in one workspace gives no access to another.
+_Avoid_: Report recipient, verified email
+
+**Report recipient**:
+A named intended viewer of permitted browser reports whose email ownership must
+be verified before access. Being a recipient does not grant internal workspace access.
+_Avoid_: Workspace member, administrator
+
 **Conversion goal**:
 A defined action that represents a desired outcome for an offering, such as an
 inquiry, registration, purchase, or download.

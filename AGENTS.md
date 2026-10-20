@@ -4,7 +4,8 @@
 - Keep the service portable: standard container HTTP and PostgreSQL boundaries.
 - Read the product brief and implementation plan before expanding product scope.
 - The backend foundation is Rust (Axum/Tokio/SQLx); browser SDK/UI code will
-  remain TypeScript. Collection and other product packages are not implemented.
+  remain TypeScript. Workspace configuration persistence and RLS exist; login, public configuration
+  routes, collection, MCP, and browser UI are not implemented yet.
 - Run `scripts/check.sh` and the relevant real-PostgreSQL/container checks.
   Keep SQLx offline metadata current; `scripts/prepare-sqlx.sh` uses an explicit
   migrated test database. Normal builds must not need production database access.

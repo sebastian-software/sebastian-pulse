@@ -3,7 +3,8 @@
 ## Status and planning basis
 
 - Date: 2026-10-20. P1 implementation plan; the Rust Package 1 foundation exists.
-  Live target setup and all product packages remain pending.
+  Workspace configuration persistence is implemented; W2 login/transports and
+  later product packages remain pending. Live target setup remains pending.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-10 ARM, single node, Frankfurt;
   1 GB RAM, 1/8 vCPU, 10 GB included disk, currently $14/month before taxes.
@@ -50,12 +51,16 @@ Keep browser SDK and UI code in TypeScript. Serve compiled admin/report assets
 from the Rust app rather than introducing a separate frontend host. Establish
 versioned wire contracts and verify generated types against actual JSON behavior.
 
-Keep auth state in Postgres and maintain domain-owned user/workspace permissions.
-Select a maintained Rust-compatible login/OAuth integration in W2; the former
-Better Auth working choice is withdrawn. Do not implement a custom OAuth
-authorization server or treat the MCP SDK as user management. Verify the selected
-combination with the intended MCP client. Keep OAuth issuer and report URLs on
-an owned domain so a hosting move can preserve their identity.
+Keep domain-owned identities and workspace/report permissions in Postgres.
+Delegate login and OAuth to a maintained separate identity provider, including a
+managed provider, under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md).
+Provider identity state may be external; assess its export and migration limits.
+The previous in-process Better Auth choice is withdrawn; a separate Better Auth
+service remains an option. Do not implement a custom authorization server or treat
+the MCP SDK as user management. Verify the actual intended MCP client. Prefer an
+owned issuer domain and preserve report URLs across hosting changes. WorkOS and
+Better Auth are candidates in the [auth assessment](../discovery/auth-integration-assessment.md);
+no provider is configured or provisioned.
 
 ```mermaid
 flowchart LR
@@ -64,6 +69,7 @@ flowchart LR
     MCP[Internal MCP client] --> App
     UI[Admin and report browser views] --> App
     App <--> PG[PostgreSQL: events, config, reports, jobs]
+    App <--> IdP[Separate maintained identity provider]
     App --> External[Advertising, EU AI, and email HTTP adapters]
 ```
 
@@ -224,9 +230,23 @@ Port contract and evidence (2026-10-20):
 
 Requires: W1 and W1-R.
 
+Status: the configuration persistence slice is implemented. It provides internal
+admin/reader memberships, transaction-local tenant context, PostgreSQL RLS, scoped
+project/goal/recipient CRUD, UUID keyset pagination, revision conflicts, and atomic
+minimal audit records. Project deletion records each deleted goal. The restricted
+runtime cannot provision identities/workspaces/memberships or edit audit records.
+Operator bootstrap is separate; there is no public configuration transport yet.
+
+Local evidence: 17 unit cases and 15 real-PostgreSQL integration cases (six foundation,
+nine workspace) pass, including raw RLS, cross-workspace operations, reused pooled
+connections after failure/cancellation, revoked membership, concurrent writers,
+and failed-audit rollback. SQLx metadata covers the static configuration queries.
+This does not establish HTTP/MCP auth, verified recipients, invites, report-link
+protection, or identity export/restore. Those gates below remain open.
+
 - Implement workspace/project/configuration models, invites and verified email
   login, an internal admin shell, and domain-owned access grants.
-- Select a maintained Rust-compatible auth integration, then integrate OAuth/MCP
+- Select and validate the maintained external identity integration, then integrate OAuth/MCP
   authorization, including resource-bound tokens and scoped tools. Use explicit
   client registration policy; enable compatibility paths only
   when the intended client requires them. Verify an actual internal MCP login.

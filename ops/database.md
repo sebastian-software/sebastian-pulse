@@ -31,12 +31,35 @@ appropriate for the dedicated database. The migrator establishes runtime schema/
 table grants. Database credentials are server secrets; never embed them in SDKs,
 browser assets, images, logs, or repository files.
 
-This package does not create tenant tables or policies; tenant isolation is W2.
-Restricted credentials are a prerequisite, not a claim of completed isolation.
+Migration 000002 adds workspaces, principals, memberships, projects, goals,
+recipients, and minimal configuration audit records. It replaces the foundation's
+future-table DML defaults with explicit grants. New application tables need their
+own deliberate runtime privileges and tenant policies.
+
+Tenant policies use transaction-local `analytics.actor_id` and
+`analytics.workspace_id` settings and a fixed-search-path membership helper.
+Missing context grants no tenant access. RLS trusts the backend's authenticated
+actor assertion; stolen runtime credentials can impersonate that context and must
+be treated as a compromise. The runtime must never own the tenant tables or the
+membership helper, assume the migrator role, or bypass RLS.
+
+The runtime can read only its own contextual membership and cannot change global
+principals, workspaces, or membership grants. Initial provisioning uses the trusted
+operator/migrator connection, outside the running service. No auth binding exists
+yet; do not map a claimed email or HTTP-supplied UUID to an operator grant. Login,
+invites, identity linkage, audited membership management, and live retention remain
+W2 work. Test fixtures provision synthetic UUID identities only.
+
+Configuration mutations use `WorkspaceStore` transactions, including their audit
+insert. Audit tables exclude recipient email and configuration contents; runtime
+UPDATE/DELETE/TRUNCATE are not granted. A project deletion removes its goals and
+records their deletions too. Raw runtime SQL has DML privileges within its RLS
+scope, so the atomic audit invariant is enforced by shared application operations,
+not a database trigger. Keep HTTP and MCP on those operations.
 
 ## Apply a release
 
-Add a consecutive `migrations/000002_description.sql` file. Never edit an applied
+Add the next consecutive numbered SQL file after the current migration set. Never edit an applied
 file. SQL files must not contain transaction control or commands that cannot run
 inside a transaction, such as `CREATE INDEX CONCURRENTLY`. All pending files and
 their history records commit together under a transaction-scoped advisory lock.

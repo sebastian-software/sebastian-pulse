@@ -10,7 +10,9 @@ See the [Bunny and PlanetScale assessment](bunny-planetscale-assessment.md) for
 the technical evidence and the [implementation plan](../plans/analytics-service.md)
 for the selected Bunny Magic Containers / PlanetScale PS-10 starting configuration.
 The Package 1 local foundation is implemented in Rust in this repository.
-Provider provisioning has not started. See the README for its commands and evidence.
+Workspace configuration persistence and RLS are implemented; login, public
+configuration transports, collection, and reporting are pending. Provider
+provisioning has not started. See the README for commands and evidence.
 
 | Product decision | Owning record |
 | --- | --- |
@@ -122,7 +124,10 @@ practical through a standard container, conventional Postgres, portable event
 contracts, and a verified export path. Preserve existing public OSS Metrics
 contracts; the analytics service has its own repository and runtime.
 
-The next design pass must resolve Rust-compatible authentication, live database
+A separate maintained identity provider, including managed identity, is allowed
+under [ADR 0010](../adr/0010-external-identity-and-workspace-grants.md). Provider
+selection, login/MCP compatibility, identity export, and auth data location still
+need validation. The next design pass must also resolve live database
 compatibility, durable scheduled work, collection peaks and event volume, cost
 boundaries, access roles, actual region/purpose rules, recognition validation,
 CLI platform derivation and shared/CI permission handling, advertising integration
@@ -136,5 +141,5 @@ The product-level scope is confirmed. The technical assessment evaluates the
 preferred shape and alternatives against this brief, including the smaller launch
 workload, operating costs, portability, and remaining feasibility gaps.
 The local Rust Package 1 foundation is implemented. Live provider provisioning
-and all collection/product capabilities remain subsequent work; accepted product
+and authentication, transports, collection, and reporting remain subsequent work; accepted product
 scope is not implementation evidence.
