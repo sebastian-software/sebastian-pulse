@@ -1,0 +1,26 @@
+{
+  "Guid": "3f86bd12-31ec-4d04-b3a3-697bca0f3ecd",
+  "ActionType": "OverrideCacheTime",
+  "ActionParameter1": "0",
+  "ActionParameter2": "",
+  "ActionParameter3": "",
+  "Triggers": [
+    {
+      "Type": "Url",
+      "PatternMatches": ["*"],
+      "PatternMatchingType": 0,
+      "Parameter1": ""
+    }
+  ],
+  "ExtraActions": [
+    {
+      "ActionType": "SetResponseHeader",
+      "ActionParameter1": "Cache-Control",
+      "ActionParameter2": "no-store"
+    }
+  ],
+  "TriggerMatchingType": 0,
+  "Description": "Pulse dynamic API: never cache",
+  "Enabled": true,
+  "OrderIndex": 100
+}

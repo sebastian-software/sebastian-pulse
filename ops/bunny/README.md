@@ -61,8 +61,8 @@ candidate from merged PR #6. Its main-branch CI run passed, including the image
 lifecycle checks. The public registry manifest was checked independently for the
 same digest and `linux/amd64` platform on October 21, 2026. Use its `imageTag` and
 `imageDigest` as the two release inputs; this record is not evidence that Bunny
-is already running the image. WorkOS Production still requires billing setup,
-and production database/runtime credentials must be resolved before provisioning.
+is already running the image. WorkOS Production is enabled as of October 21,
+2026; production database/runtime credentials must still be provisioned.
 
 [`env.workos.production.template`](env.workos.production.template) lists the intended
 production secret references; its WorkOS production item is not provisioned.
@@ -98,6 +98,33 @@ credentials out of files and shell arguments. `--check` makes no network calls.
 the endpoint/pull zone and verify the owned domain, TLS, cache bypass, and Host
 forwarding before deploying through Bunny's application deploy endpoint.
 Inspect an existing app before updating it; the tool never overwrites one.
+
+### DNS and CDN boundary
+
+Public DNS for `sebastian-software.de` is authoritative at Cloudflare, confirmed
+on October 21, 2026. The same-named Bunny DNS zone is not authoritative. Create
+only the `pulse` CNAME in the existing Cloudflare zone, using
+[`pulse-cname.template.json`](../cloudflare/pulse-cname.template.json) and the
+actual `publicHost` returned by the new Magic Containers endpoint. Keep the
+Cloudflare proxy disabled; the application and HTTP edge run on Bunny. Refuse an
+existing conflicting record rather than overwriting it. Do not change nameservers.
+
+Apply [`pull-zone.settings.json`](pull-zone.settings.json) to that endpoint's
+assigned pull zone. It preserves the requested Host header, selects EU-only CDN
+routing, and disables logging, origin shielding, and cache features. Add
+[`no-cache.edge-rule.json`](no-cache.edge-rule.json) without replacing Bunny's
+existing Magic Containers origin-routing rules. It bypasses caching for every
+URL and sets `Cache-Control: no-store`. The Rust service also sets that header.
+For any reused zone, purge previously cached responses before enabling traffic.
+
+Add the owned hostname to the same pull zone, wait for authoritative DNS, request
+the free certificate, and enable forced HTTPS. Verify all settings by reading
+them back before deployment, then exercise both the public origin and repeated
+authenticated responses. A configuration template alone is not live evidence.
+
+References: [Core API specification](https://bunny.net/docs/api-reference/core/openapi.json),
+[routing filters](https://bunny.net/docs/cdn/performance/routing-filters),
+[custom hostnames](https://bunny.net/docs/cdn/custom-hostname).
 
 ## Previous OIDC application manifest
 

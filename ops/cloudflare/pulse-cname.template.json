@@ -1,0 +1,8 @@
+{
+  "type": "CNAME",
+  "name": "pulse.sebastian-software.de",
+  "content": "$env:PULSE_BUNNY_PUBLIC_HOST",
+  "proxied": false,
+  "ttl": 300,
+  "comment": "Sebastian Pulse on Bunny Magic Containers"
+}

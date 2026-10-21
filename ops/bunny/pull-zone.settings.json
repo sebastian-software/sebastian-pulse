@@ -1,0 +1,15 @@
+{
+  "CacheControlMaxAgeOverride": 0,
+  "CacheControlPublicMaxAgeOverride": 0,
+  "CacheErrorResponses": false,
+  "EnableSmartCache": false,
+  "EnableCacheSlice": false,
+  "IgnoreQueryStrings": false,
+  "AddHostHeader": true,
+  "OriginHostHeader": "",
+  "RoutingFilters": ["EU"],
+  "EnableOriginShield": false,
+  "PermaCacheStorageZoneId": 0,
+  "EnableLogging": false,
+  "LoggingSaveToStorage": false
+}
