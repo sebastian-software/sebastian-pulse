@@ -9,8 +9,8 @@
   native SDK, browser/MCP routes, and managed RLS context are fixture-tested.
   Real staging browser login and scoped public PKCE MCP reads, writes, tenant
   denial, and refresh passed locally. The pinned native release is running on
-  Bunny with PlanetScale and WorkOS Production; authenticated production
-  enrollment/MCP validation remains pending.
+  Bunny with PlanetScale and WorkOS Production. Verified admin browser access,
+  scoped production MCP operations/refresh, and Codex login/discovery passed.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-5 ARM with HA, Frankfurt;
   one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB
@@ -82,8 +82,9 @@ configured, and real AuthKit registration, verified email, callback, and browser
 session passed locally. Explicit public PKCE Connect clients also passed MCP
 initialization/discovery, scoped reads/writes, cross-workspace denial, tampered
 token rejection, and refresh with isolated local data. Dynamic registration,
-concurrent browser refresh, recovery, and authenticated production enrollment/MCP
-validation remain pending.
+concurrent browser refresh, and recovery remain pending. Production enrollment,
+verified admin browser access, scoped MCP operations/refresh, and Codex
+login/discovery passed on October 21, 2026.
 See the [WorkOS guide](../../ops/workos.md). The existing OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
 
 ```mermaid

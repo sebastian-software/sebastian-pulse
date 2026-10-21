@@ -8,7 +8,10 @@
   "instances": 1,
   "releaseRecord": "release.workos.json",
   "imageDigest": "sha256:6a90f3f250158cb14b65ee58a292dfd2128c05899b2afea27cf610bd8c761d3b",
-  "dns": { "provider": "Cloudflare", "proxyEnabled": false },
+  "dns": {
+    "provider": "Cloudflare",
+    "proxyEnabled": false
+  },
   "authkitOrigin": "https://wealthy-aspiration-91.authkit.app",
   "database": {
     "provider": "PlanetScale",
@@ -31,7 +34,34 @@
     "publicPkceRedirectAndSecureCookie": true,
     "unauthenticatedSessionAndMcpDenied": true,
     "schemaOnlyPortableRestore": true,
-    "authenticatedProductionBrowser": false,
-    "authenticatedProductionMcp": false
+    "authenticatedProductionBrowser": true,
+    "authenticatedProductionMcp": true,
+    "codexProductionLoginAndToolDiscovery": true,
+    "syntheticMcpProjectDeleted": true
+  },
+  "mcp": {
+    "resource": "https://pulse.sebastian-software.de/mcp",
+    "callback": "http://127.0.0.1:34627/callback/Jx5bSh0oohI3",
+    "publicClients": [
+      {
+        "access": "read",
+        "clientId": "client_01M5F8J49WXZ0V8TV4AENJDXY6",
+        "permissions": [
+          "pulse:read"
+        ]
+      },
+      {
+        "access": "write",
+        "clientId": "client_01M5F8J4SCXCZKH5P6X8M6F3YC",
+        "permissions": [
+          "pulse:read",
+          "pulse:write"
+        ]
+      }
+    ],
+    "pkce": "S256",
+    "requestOfflineAccess": true,
+    "dynamicClientRegistration": false,
+    "clientIdMetadataDocuments": false
   }
 }

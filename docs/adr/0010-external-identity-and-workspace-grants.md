@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-21
-- Change note: Deploy the native WorkOS release on Bunny with restricted PlanetScale roles and record the remaining authenticated production checks.
+- Change note: Verify the production WorkOS browser/admin path, scoped MCP operations and refresh, and actual Codex login/tool discovery on Bunny.
 
 ## Context
 
@@ -137,12 +137,16 @@ PostgreSQL data. Read-only delegation denied writes even for an admin member;
 read/write delegation allowed synthetic project create/update/delete. Tampered
 tokens were rejected. Resource binding was required in both token exchange and
 refresh requests. Dynamic client registration, concurrent browser refresh
-resilience, signing-key rollover against the real provider,
-authenticated production browser/MCP checks and recovery remain completion gates.
+resilience, signing-key rollover against the real provider, and recovery remain
+completion gates.
 The pinned release is running on Bunny in Frankfurt with PlanetScale PostgreSQL
 18.6 and WorkOS Production. The owned hostname, verified TLS, cache bypass,
 public PKCE redirect, restricted runtime role, and schema-only PostgreSQL restore
-passed live checks on October 21, 2026. See the
+passed live checks on October 21, 2026. Production enrollment, verified admin
+browser access, read-only write denial, synthetic MCP project CRUD, foreign
+workspace-identifier denial, refresh, and altered-token rejection also passed.
+Codex completed production OAuth login and discovery of all 13 tools; Codex tool
+invocation and automatic refresh remain separate checks. See the
 [deployment receipt](../../ops/bunny/production.workos.json).
 See the [WorkOS integration guide](../../ops/workos.md).
 

@@ -5,7 +5,8 @@ cluster `sebastian-pulse`, branch `main`, was provisioned on October 20, 2026.
 The production foundation is running at https://pulse.sebastian-software.de as of
 October 21, 2026. Public readiness, the pinned release, TLS, EU routing, cache
 bypass, and runtime database restrictions passed live checks. AuthKit production
-enrollment and authenticated browser/MCP checks remain in progress. See
+enrollment, verified admin browser access, scoped MCP operations/refresh, and
+Codex login/tool discovery also passed. See
 [`production.workos.json`](production.workos.json) for the non-secret deployment receipt.
 
 | Setting | Initial target |

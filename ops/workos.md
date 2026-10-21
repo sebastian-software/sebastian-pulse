@@ -21,9 +21,11 @@ The native WorkOS release is running on Bunny in Frankfurt as of October 21,
 production API key/session-sealing key in the company 1Password vault. Email +
 Password is enabled with WorkOS's Strong policy: minimum 10 characters, zxcvbn
 score at least 3, and breached-password rejection. The production organization,
-reader/admin roles, and product workspace binding are configured. Initial
-production enrollment and authenticated browser/MCP proof remain pending; public
-health and unauthenticated denial checks passed. See the
+reader/admin roles, and product workspace binding are configured. Production
+enrollment, verified admin browser access, protected workspace reads, and both
+scoped MCP clients passed live checks. Codex completed production OAuth login and
+discovered all 13 tools. Public health and unauthenticated denial checks passed.
+See the
 [Bunny deployment receipt](bunny/production.workos.json).
 
 `src/auth/workos.rs` contains the native Rust SDK boundary. Its synthetic tests
@@ -210,10 +212,9 @@ Remaining checks:
   oversized sealed sessions fail closed. The production cookie is host-only,
   HttpOnly, Secure, and SameSite=Lax. Mutations require Origin plus CSRF; logout
   revokes the WorkOS session and clears local cookies.
-- Publish the checked image and render the native WorkOS Bunny template using
-  its exact commit tag/digest and production-only secrets. Validate TLS, canonical
-  Host/Origin, no caching, readiness, and the real login on the owned URL. The
-  earlier Rauthy image/profile is not the native WorkOS deployment artifact.
+- Repeat release identity, TLS, canonical Host/Origin, cache bypass, readiness,
+  and owned-origin login checks on later releases. The initial native production
+  release passed these checks; see the production evidence below.
 - Record and rehearse backup/restore of product ID mappings, provider grant
   export, replacement, revocation, and rollback before production release.
 
@@ -222,6 +223,69 @@ should receive verified internal IDs and permission context. Provider replacemen
 must export and reconcile organizations, memberships, roles, permissions, and ID
 mappings in addition to identities; see the
 [privacy and exit assessment](../docs/discovery/workos-privacy-and-exit.md).
+
+## Production proof on October 21, 2026
+
+The tested native release in [bunny/release.workos.json](bunny/release.workos.json)
+is running at `https://pulse.sebastian-software.de`. Production has separate
+AuthKit keys, sealed-session encryption, verified email enrollment, an active
+admin membership, and an exact organization/workspace binding. No local
+membership grant was added. The authenticated browser session resolves an
+internal principal/workspace and write permission; the protected workspace GET
+returns the expected workspace.
+
+Connect has two public OAuth clients with S256 PKCE and no client secrets:
+
+| Access | Public client ID | Application permission scopes |
+| --- | --- | --- |
+| Read | `client_01M5F8J49WXZ0V8TV4AENJDXY6` | `pulse:read` |
+| Read/write | `client_01M5F8J4SCXCZKH5P6X8M6F3YC` | `pulse:read`, `pulse:write` |
+
+Both use only `http://127.0.0.1:34627/callback/Jx5bSh0oohI3`, measured from the
+actual Codex OAuth request for this production URL. The sole registered resource
+is `https://pulse.sebastian-software.de/mcp`. DCR and CIMD remain disabled.
+WorkOS required an explicit owning `organization_id` when creating these clients.
+Organization/user IDs remain in operator metadata rather than this repository.
+
+Application `scopes` contain permission slugs. Request `offline_access` separately
+in OAuth authorization; it is a built-in OAuth scope, not an organization
+permission to create or assign. Resource binding remains explicit in
+authorization, code exchange, and refresh. Consent descriptions distinguish
+viewing configuration from creating, updating, and deleting it.
+
+| Production check | Result |
+| --- | --- |
+| S256 callback, code exchange, exact resource audience and selected organization | Passed for both clients. |
+| MCP initialization, tool discovery, and own workspace read | Passed for both clients. |
+| Foreign workspace identifier | Rejected with workspace-access denial. |
+| Read-only delegation for the admin user | Write rejected because write delegation is required. |
+| Read/write delegation for the admin user | Synthetic project created, updated, and deleted. Audit history remains by design. |
+| Refresh token, exact refreshed audience, subsequent MCP read | Passed for both clients. |
+| Altered token signature | HTTP 401 for both clients. |
+| Actual Codex app-server client | Production OAuth login and discovery of all 13 tools passed. |
+
+Operation and refresh checks used a minimal OAuth/HTTP MCP client. Codex tool
+invocation and automatic token refresh remain separate checks. OAuth/HTTP proof
+tokens stayed in memory; the temporary Codex OAuth credential was removed from the local
+keyring afterward. No permanent local MCP configuration was changed.
+
+Example production read-client configuration:
+
+```toml
+mcp_oauth_credentials_store = "keyring"
+
+[mcp_servers.pulse]
+url = "https://pulse.sebastian-software.de/mcp"
+
+[mcp_servers.pulse.oauth]
+client_id = "client_01M5F8J49WXZ0V8TV4AENJDXY6"
+callback_port = 34627
+```
+
+Then run `codex mcp login pulse --scopes pulse:read,offline_access`. For the write
+client, use its public ID and request `pulse:read,pulse:write,offline_access`.
+Verify the actual callback if the client or endpoint changes. No WorkOS API key
+belongs in this client configuration.
 
 ## Sources
 
