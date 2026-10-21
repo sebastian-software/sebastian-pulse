@@ -15,7 +15,16 @@ organization receives no product IDs or internal write access.
 The staging pilot organization, reader/admin roles, and two public Connect
 clients are configured. Real scoped MCP operations and token refresh passed
 against isolated local PostgreSQL data; see the evidence below.
-No production login or Bunny application is deployed.
+The native WorkOS release is running on Bunny in Frankfurt as of October 21,
+2026. Production uses `https://wealthy-aspiration-91.authkit.app`, the exact
+`https://pulse.sebastian-software.de/auth/callback` callback, and a separate
+production API key/session-sealing key in the company 1Password vault. Email +
+Password is enabled with WorkOS's Strong policy: minimum 10 characters, zxcvbn
+score at least 3, and breached-password rejection. The production organization,
+reader/admin roles, and product workspace binding are configured. Initial
+production enrollment and authenticated browser/MCP proof remain pending; public
+health and unauthenticated denial checks passed. See the
+[Bunny deployment receipt](bunny/production.workos.json).
 
 `src/auth/workos.rs` contains the native Rust SDK boundary. Its synthetic tests
 cover AuthKit S256/state generation, code exchange, sealed-session tampering and

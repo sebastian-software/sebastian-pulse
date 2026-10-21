@@ -2,8 +2,11 @@
 
 This is the deployment contract for the initial live setup. The PlanetScale
 cluster `sebastian-pulse`, branch `main`, was provisioned on October 20, 2026.
-Bunny deployment and the real database/authentication path remain in progress;
-the local and CI checks alone do not establish production readiness.
+The production foundation is running at https://pulse.sebastian-software.de as of
+October 21, 2026. Public readiness, the pinned release, TLS, EU routing, cache
+bypass, and runtime database restrictions passed live checks. AuthKit production
+enrollment and authenticated browser/MCP checks remain in progress. See
+[`production.workos.json`](production.workos.json) for the non-secret deployment receipt.
 
 | Setting | Initial target |
 | --- | --- |
@@ -60,14 +63,15 @@ Do not send unresolved `$env:` values or the earlier Rauthy-era image to Bunny.
 candidate from merged PR #6. Its main-branch CI run passed, including the image
 lifecycle checks. The public registry manifest was checked independently for the
 same digest and `linux/amd64` platform on October 21, 2026. Use its `imageTag` and
-`imageDigest` as the two release inputs; this record is not evidence that Bunny
-is already running the image. WorkOS Production is enabled as of October 21,
-2026; production database/runtime credentials must still be provisioned.
+`imageDigest` as the two release inputs. Live health responses and the Bunny
+container inventory independently confirmed the same release and digest. WorkOS
+Production and the restricted PostgreSQL credentials were provisioned on
+October 21, 2026.
 
 [`env.workos.production.template`](env.workos.production.template) lists the intended
-production secret references; its WorkOS production item is not provisioned.
-Create production credentials only as part of the authorized rollout. Resolve
-references and substitute all template inputs in memory; do not save rendered
+production secret references. The referenced production items are provisioned
+in the company vault. Keep environment keys and session-sealing keys separate.
+Resolve references and substitute all template inputs in memory; do not save rendered
 credential files. Validate a full commit SHA and `sha256:` plus 64 hexadecimal
 digest characters before upload. Use the WorkOS production environment and its
 exact registered production callback; a staging key is not a production secret.
@@ -79,9 +83,11 @@ Run all four migrations before starting the matching new image.
 `scripts/provision-bunny.py` validates the native template, resolves `$env:NAME`
 inputs from its process environment in memory, and creates the initial app. It
 refuses duplicate application names, mutable image tags, missing digest pins,
-staging WorkOS keys, a different production origin, non-Frankfurt regions, and
-operator/migration credentials in the runtime. Provider error bodies are
-suppressed because they can echo submitted secrets.
+known staging WorkOS keys/domains, a different production origin, non-Frankfurt
+regions, and operator/migration credentials in the runtime. Provider error bodies are
+suppressed because they can echo submitted secrets. WorkOS documents the `sk_`
+prefix; a key prefix alone cannot establish its environment. Resolve the verified
+production key, client ID, and hosted issuer from the same production item.
 
 ```sh
 python3 scripts/provision-bunny.py --validate-template
@@ -94,8 +100,9 @@ python3 scripts/provision-bunny.py --create
 The tool does not resolve `op://` references itself. Supply the values named in
 `env.workos.production.template` through a secret-manager runner; keep rendered
 credentials out of files and shell arguments. `--check` makes no network calls.
-`--create` returns only the new application ID and does not deploy it. Configure
-the endpoint/pull zone and verify the owned domain, TLS, cache bypass, and Host
+`--create` returns only the new application ID and does not issue an explicit
+deploy request. Creation can provision application resources; treat the endpoint
+as public during setup. Configure the endpoint/pull zone and verify the owned domain, TLS, cache bypass, and Host
 forwarding before deploying through Bunny's application deploy endpoint.
 Inspect an existing app before updating it; the tool never overwrites one.
 
@@ -112,9 +119,14 @@ existing conflicting record rather than overwriting it. Do not change nameserver
 Apply [`pull-zone.settings.json`](pull-zone.settings.json) to that endpoint's
 assigned pull zone. It preserves the requested Host header, selects EU-only CDN
 routing, and disables logging, origin shielding, and cache features. Add
-[`no-cache.edge-rule.json`](no-cache.edge-rule.json) without replacing Bunny's
-existing Magic Containers origin-routing rules. It bypasses caching for every
-URL and sets `Cache-Control: no-store`. The Rust service also sets that header.
+[`no-cache.edge-rule.json`](no-cache.edge-rule.json) without replacing existing
+rules or changing the Magic Containers origin configuration. Omit `Guid` on
+creation; Bunny generates it. Find the unique description on subsequent runs and
+use its returned `Guid` for updates. Refuse duplicate matching descriptions.
+The rule bypasses caching for every URL and sets `Cache-Control: no-store`. The
+Rust service also sets that header. Bunny normalizes the EU filter to `eu`
+and named edge actions/triggers to numeric enum values in API responses; compare
+their meaning when verifying the read-back.
 For any reused zone, purge previously cached responses before enabling traffic.
 
 Add the owned hostname to the same pull zone, wait for authoritative DNS, request

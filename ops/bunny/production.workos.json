@@ -1,0 +1,37 @@
+{
+  "verifiedOn": "2026-10-21",
+  "origin": "https://pulse.sebastian-software.de",
+  "applicationId": "NGxRYkcbZokUVP3",
+  "endpointHost": "mc-0scmf4tx18.bunny.run",
+  "pullZoneId": "6841623",
+  "region": "DE",
+  "instances": 1,
+  "releaseRecord": "release.workos.json",
+  "imageDigest": "sha256:6a90f3f250158cb14b65ee58a292dfd2128c05899b2afea27cf610bd8c761d3b",
+  "dns": { "provider": "Cloudflare", "proxyEnabled": false },
+  "authkitOrigin": "https://wealthy-aspiration-91.authkit.app",
+  "database": {
+    "provider": "PlanetScale",
+    "cluster": "sebastian-pulse",
+    "branch": "main",
+    "logicalDatabase": "pulse",
+    "serverVersion": "18.6",
+    "runtimeRole": "analytics_app",
+    "migrationRole": "analytics_migrator",
+    "runtimePrivilegeGroup": "analytics_runtime"
+  },
+  "checks": {
+    "liveAndReady": true,
+    "releaseMatches": true,
+    "ownedHostnameCertificate": true,
+    "forcedHttps": true,
+    "euRoutingReadBack": true,
+    "cdnCacheBypass": true,
+    "runtimeDatabaseRestrictions": true,
+    "publicPkceRedirectAndSecureCookie": true,
+    "unauthenticatedSessionAndMcpDenied": true,
+    "schemaOnlyPortableRestore": true,
+    "authenticatedProductionBrowser": false,
+    "authenticatedProductionMcp": false
+  }
+}

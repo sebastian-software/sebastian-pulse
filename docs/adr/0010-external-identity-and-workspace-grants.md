@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-10-20
 - Updated: 2026-10-21
-- Change note: Validate managed WorkOS browser login and scoped public PKCE MCP reads, writes, tenant isolation, and refresh against isolated local data; retain separate production gates.
+- Change note: Deploy the native WorkOS release on Bunny with restricted PlanetScale roles and record the remaining authenticated production checks.
 
 ## Context
 
@@ -137,8 +137,13 @@ PostgreSQL data. Read-only delegation denied writes even for an admin member;
 read/write delegation allowed synthetic project create/update/delete. Tampered
 tokens were rejected. Resource binding was required in both token exchange and
 refresh requests. Dynamic client registration, concurrent browser refresh
-resilience, signing-key rollover against the real provider, production
-cookie/ingress configuration, deployment, and recovery remain completion gates.
+resilience, signing-key rollover against the real provider,
+authenticated production browser/MCP checks and recovery remain completion gates.
+The pinned release is running on Bunny in Frankfurt with PlanetScale PostgreSQL
+18.6 and WorkOS Production. The owned hostname, verified TLS, cache bypass,
+public PKCE redirect, restricted runtime role, and schema-only PostgreSQL restore
+passed live checks on October 21, 2026. See the
+[deployment receipt](../../ops/bunny/production.workos.json).
 See the [WorkOS integration guide](../../ops/workos.md).
 
 ## References

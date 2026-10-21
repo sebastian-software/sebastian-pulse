@@ -74,12 +74,12 @@ def validate(manifest, rendered=False):
     if rendered:
         if not re.fullmatch(r"[0-9a-fA-F]{64}", values["WORKOS_COOKIE_PASSWORD"]):
             raise ValueError("A separate 32-byte session-sealing key is required")
-        if not values["WORKOS_API_KEY"].startswith("sk_live_"):
+        if not values["WORKOS_API_KEY"].startswith("sk_") or values["WORKOS_API_KEY"].startswith("sk_test_"):
             raise ValueError("A production WorkOS environment key is required")
         if not values["WORKOS_CLIENT_ID"].startswith("client_"):
             raise ValueError("An AuthKit environment client ID is required")
         issuer = parse_url(values["WORKOS_AUTHKIT_URL"])
-        if issuer.scheme != "https" or not (issuer.hostname or "").endswith(".authkit.app") or issuer.path not in ("", "/") or issuer.query or issuer.fragment or issuer.username or issuer.password or issuer.port:
+        if issuer.scheme != "https" or not (issuer.hostname or "").endswith(".authkit.app") or "-staging" in (issuer.hostname or "") or issuer.path not in ("", "/") or issuer.query or issuer.fragment or issuer.username or issuer.password or issuer.port:
             raise ValueError("Expected the default HTTPS AuthKit origin")
         database = parse_url(values["DATABASE_URL"])
         if database.scheme not in ("postgres", "postgresql") or not database.hostname or not database.username or not database.password:
@@ -171,7 +171,7 @@ def main():
         raise ValueError("Missing BUNNY_API_KEY operator credential")
     refuse_existing(key, payload["name"])
     app = api("POST", "/apps", key, payload)
-    print(json.dumps({"id": app["id"], "name": payload["name"], "deployed": False}))
+    print(json.dumps({"id": app["id"], "name": payload["name"], "deployment_requested": False}))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 {
-  "Guid": "3f86bd12-31ec-4d04-b3a3-697bca0f3ecd",
   "ActionType": "OverrideCacheTime",
   "ActionParameter1": "0",
   "ActionParameter2": "",
@@ -7,7 +6,9 @@
   "Triggers": [
     {
       "Type": "Url",
-      "PatternMatches": ["*"],
+      "PatternMatches": [
+        "*"
+      ],
       "PatternMatchingType": 0,
       "Parameter1": ""
     }

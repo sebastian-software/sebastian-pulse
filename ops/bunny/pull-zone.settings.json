@@ -7,7 +7,7 @@
   "IgnoreQueryStrings": false,
   "AddHostHeader": true,
   "OriginHostHeader": "",
-  "RoutingFilters": ["EU"],
+  "RoutingFilters": ["eu"],
   "EnableOriginShield": false,
   "PermaCacheStorageZoneId": 0,
   "EnableLogging": false,

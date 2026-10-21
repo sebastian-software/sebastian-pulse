@@ -22,7 +22,7 @@ class ProvisioningTests(unittest.TestCase):
             "PULSE_IMAGE_TAG": "a" * 40,
             "PULSE_IMAGE_DIGEST": "sha256:" + "b" * 64,
             "DATABASE_URL": "postgresql://runtime:fixture-password@db.example.test/pulse",
-            "WORKOS_API_KEY": "sk_live_fixture_only",
+            "WORKOS_API_KEY": "sk_fixture_production_only",
             "WORKOS_CLIENT_ID": "client_fixture_only",
             "WORKOS_AUTHKIT_URL": "https://pulse-fixture.authkit.app",
             "WORKOS_COOKIE_PASSWORD": "c" * 64,
@@ -67,7 +67,7 @@ class ProvisioningTests(unittest.TestCase):
             PROVISION.validate(self.manifest)
 
     def test_staging_credentials_and_cross_origin_login_fail(self):
-        for name, value in (("WORKOS_API_KEY", "sk_test_fixture"), ("WORKOS_AUTHKIT_URL", "https://pulse-fixture.authkit.app.attacker.test")):
+        for name, value in (("WORKOS_API_KEY", "sk_test_fixture"), ("WORKOS_AUTHKIT_URL", "https://pulse-fixture-staging.authkit.app"), ("WORKOS_AUTHKIT_URL", "https://pulse-fixture.authkit.app.attacker.test")):
             with self.subTest(name=name):
                 inputs = {**self.inputs, name: value}
                 with self.assertRaises(ValueError):
