@@ -58,6 +58,38 @@ records their deletions too. Raw runtime SQL has DML privileges within its RLS
 scope, so the atomic audit invariant is enforced by shared application operations,
 not a database trigger. Keep HTTP and MCP on those operations.
 
+## Verified PlanetScale setup
+
+The production `sebastian-pulse` cluster/main branch contains the logical database
+`pulse` as of October 21, 2026. Ordinary SQL-created `analytics_migrator` and
+`analytics_app` logins and the non-login `analytics_runtime` group implement the
+same portable roles as the local fixture. SQL-created roles do not appear in
+PlanetScale's managed-role inventory. Their connection usernames include the
+PlanetScale branch suffix; the SQL role names above do not.
+
+The migrator owns the database, application schema, and migrated objects. The
+runtime cannot assume the migrator role, create schemas/databases/roles or
+objects, use temporary tables, modify migration history, or bypass RLS. Public
+schema CREATE and PUBLIC database access are revoked. Only the runtime URL is
+injected into Bunny. Both connection URLs are concealed fields in the company
+1Password item `Sebastian Pulse - Production`. The bootstrap administrator has
+a 24-hour lifetime and is outside the application environment.
+
+All four migrations ran successfully using the tested native WorkOS image in
+[bunny/release.workos.json](bunny/release.workos.json). The actual server reports
+PostgreSQL 18.6. A libpq connection with `sslmode=verify-full` and the system trust
+store reports TLS 1.3; the same image's migrator and the live Bunny readiness
+check also succeeded with `DATABASE_TLS=verify-full`. Check client connection
+information for the TLS session: `pg_stat_ssl` on the backend behind the provider
+proxy reported no backend SSL and is not evidence of the client's transport.
+
+A schema-only `pg_dump` from PlanetScale was restored into isolated ordinary
+PostgreSQL 18.6, preserving schema ownership, seven RLS tables, and restricted
+runtime grants. No production rows were exported. A synthetic local workspace
+remained invisible to the runtime without context. A complete data-bearing
+backup/restore and recovery-time rehearsal has not been performed. Keep that
+separate from the successful schema portability check.
+
 ## Apply a release
 
 Add the next consecutive numbered SQL file after the current migration set. Never edit an applied

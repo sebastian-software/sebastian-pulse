@@ -1,0 +1,27 @@
+{
+  "ActionType": "OverrideCacheTime",
+  "ActionParameter1": "0",
+  "ActionParameter2": "",
+  "ActionParameter3": "",
+  "Triggers": [
+    {
+      "Type": "Url",
+      "PatternMatches": [
+        "*"
+      ],
+      "PatternMatchingType": 0,
+      "Parameter1": ""
+    }
+  ],
+  "ExtraActions": [
+    {
+      "ActionType": "SetResponseHeader",
+      "ActionParameter1": "Cache-Control",
+      "ActionParameter2": "no-store"
+    }
+  ],
+  "TriggerMatchingType": 0,
+  "Description": "Pulse dynamic API: never cache",
+  "Enabled": true,
+  "OrderIndex": 100
+}

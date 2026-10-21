@@ -8,7 +8,9 @@
   pending. The selected identity target is managed WorkOS AuthKit/Connect; its
   native SDK, browser/MCP routes, and managed RLS context are fixture-tested.
   Real staging browser login and scoped public PKCE MCP reads, writes, tenant
-  denial, and refresh passed locally; production deployment remains pending.
+  denial, and refresh passed locally. The pinned native release is running on
+  Bunny with PlanetScale and WorkOS Production. Verified admin browser access,
+  scoped production MCP operations/refresh, and Codex login/discovery passed.
 - Selected deployment: Bunny Magic Containers, one EU region, initially Frankfurt.
 - Selected database: PlanetScale Postgres PS-5 ARM with HA, Frankfurt;
   one primary and two replicas, each with 512 MB RAM and 1/16 vCPU; 10 GB
@@ -30,15 +32,18 @@
 
 The service repository is `sebastian-software/sebastian-pulse` (public, Apache-2.0).
 The existing public OSS Metrics API, Rybbit integration, and website remain a
-separate application. An owned service domain and production operator setup
-remain deployment inputs.
+separate application. The production foundation uses
+`https://pulse.sebastian-software.de`; see the
+[deployment receipt](../../ops/bunny/production.workos.json).
 
 The README describes implemented Rust commands. W1-R replaces the TypeScript
 foundation; the product packages below are not evidence of implemented features.
 The PlanetScale cluster `sebastian-pulse`, branch `main`, was created on October
 20, 2026: PostgreSQL 18.6 on PS-5 HA in Frankfurt, with the primary and two
-replicas in separate availability zones. Logical databases, restricted roles,
-and actual Bunny-to-PlanetScale validation remain in progress.
+replicas in separate availability zones. The logical `pulse` database, restricted
+runtime/migration roles, four migrations, and actual Bunny-to-PlanetScale readiness/TLS validation passed on October 21.
+Schema-only portability passed against ordinary PostgreSQL 18.6; a complete
+data-bearing restore rehearsal remains pending.
 
 ## Architecture and portability contract
 
@@ -77,7 +82,9 @@ configured, and real AuthKit registration, verified email, callback, and browser
 session passed locally. Explicit public PKCE Connect clients also passed MCP
 initialization/discovery, scoped reads/writes, cross-workspace denial, tampered
 token rejection, and refresh with isolated local data. Dynamic registration,
-concurrent browser refresh, recovery, and production deployment remain pending.
+concurrent browser refresh, and recovery remain pending. Production enrollment,
+verified admin browser access, scoped MCP operations/refresh, and Codex
+login/discovery passed on October 21, 2026.
 See the [WorkOS guide](../../ops/workos.md). The existing OIDC/local-membership path and local Rauthy proof remain an explicit legacy mode.
 
 ```mermaid

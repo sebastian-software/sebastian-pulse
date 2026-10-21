@@ -2,8 +2,12 @@
 
 This is the deployment contract for the initial live setup. The PlanetScale
 cluster `sebastian-pulse`, branch `main`, was provisioned on October 20, 2026.
-Bunny deployment and the real database/authentication path remain in progress;
-the local and CI checks alone do not establish production readiness.
+The production foundation is running at https://pulse.sebastian-software.de as of
+October 21, 2026. Public readiness, the pinned release, TLS, EU routing, cache
+bypass, and runtime database restrictions passed live checks. AuthKit production
+enrollment, verified admin browser access, scoped MCP operations/refresh, and
+Codex login/tool discovery also passed. See
+[`production.workos.json`](production.workos.json) for the non-secret deployment receipt.
 
 | Setting | Initial target |
 | --- | --- |
@@ -56,15 +60,84 @@ Frankfurt/container/probe contract and uses native WorkOS settings. It is a
 commit tag and exact GHCR digest through `PULSE_IMAGE_TAG` and `PULSE_IMAGE_DIGEST`.
 Do not send unresolved `$env:` values or the earlier Rauthy-era image to Bunny.
 
+[`release.workos.json`](release.workos.json) records the published native WorkOS
+candidate from merged PR #6. Its main-branch CI run passed, including the image
+lifecycle checks. The public registry manifest was checked independently for the
+same digest and `linux/amd64` platform on October 21, 2026. Use its `imageTag` and
+`imageDigest` as the two release inputs. Live health responses and the Bunny
+container inventory independently confirmed the same release and digest. WorkOS
+Production and the restricted PostgreSQL credentials were provisioned on
+October 21, 2026.
+
 [`env.workos.production.template`](env.workos.production.template) lists the intended
-production secret references; its WorkOS production item is not provisioned.
-Create production credentials only as part of the authorized rollout. Resolve
-references and substitute all template inputs in memory; do not save rendered
+production secret references. The referenced production items are provisioned
+in the company vault. Keep environment keys and session-sealing keys separate.
+Resolve references and substitute all template inputs in memory; do not save rendered
 credential files. Validate a full commit SHA and `sha256:` plus 64 hexadecimal
 digest characters before upload. Use the WorkOS production environment and its
 exact registered production callback; a staging key is not a production secret.
 Keep `BUNNY_API_KEY` in operator tooling, outside the container environment.
 Run all four migrations before starting the matching new image.
+
+### Provisioning tool
+
+`scripts/provision-bunny.py` validates the native template, resolves `$env:NAME`
+inputs from its process environment in memory, and creates the initial app. It
+refuses duplicate application names, mutable image tags, missing digest pins,
+known staging WorkOS keys/domains, a different production origin, non-Frankfurt
+regions, and operator/migration credentials in the runtime. Provider error bodies are
+suppressed because they can echo submitted secrets. WorkOS documents the `sk_`
+prefix; a key prefix alone cannot establish its environment. Resolve the verified
+production key, client ID, and hosted issuer from the same production item.
+
+```sh
+python3 scripts/provision-bunny.py --validate-template
+python3 -m unittest discover -s scripts -p 'test_bunny_provision.py'
+# Inject the release inputs and credentials through the operator's secret store.
+python3 scripts/provision-bunny.py --check
+python3 scripts/provision-bunny.py --create
+```
+
+The tool does not resolve `op://` references itself. Supply the values named in
+`env.workos.production.template` through a secret-manager runner; keep rendered
+credentials out of files and shell arguments. `--check` makes no network calls.
+`--create` returns only the new application ID and does not issue an explicit
+deploy request. Creation can provision application resources; treat the endpoint
+as public during setup. Configure the endpoint/pull zone and verify the owned domain, TLS, cache bypass, and Host
+forwarding before deploying through Bunny's application deploy endpoint.
+Inspect an existing app before updating it; the tool never overwrites one.
+
+### DNS and CDN boundary
+
+Public DNS for `sebastian-software.de` is authoritative at Cloudflare, confirmed
+on October 21, 2026. The same-named Bunny DNS zone is not authoritative. Create
+only the `pulse` CNAME in the existing Cloudflare zone, using
+[`pulse-cname.template.json`](../cloudflare/pulse-cname.template.json) and the
+actual `publicHost` returned by the new Magic Containers endpoint. Keep the
+Cloudflare proxy disabled; the application and HTTP edge run on Bunny. Refuse an
+existing conflicting record rather than overwriting it. Do not change nameservers.
+
+Apply [`pull-zone.settings.json`](pull-zone.settings.json) to that endpoint's
+assigned pull zone. It preserves the requested Host header, selects EU-only CDN
+routing, and disables logging, origin shielding, and cache features. Add
+[`no-cache.edge-rule.json`](no-cache.edge-rule.json) without replacing existing
+rules or changing the Magic Containers origin configuration. Omit `Guid` on
+creation; Bunny generates it. Find the unique description on subsequent runs and
+use its returned `Guid` for updates. Refuse duplicate matching descriptions.
+The rule bypasses caching for every URL and sets `Cache-Control: no-store`. The
+Rust service also sets that header. Bunny normalizes the EU filter to `eu`
+and named edge actions/triggers to numeric enum values in API responses; compare
+their meaning when verifying the read-back.
+For any reused zone, purge previously cached responses before enabling traffic.
+
+Add the owned hostname to the same pull zone, wait for authoritative DNS, request
+the free certificate, and enable forced HTTPS. Verify all settings by reading
+them back before deployment, then exercise both the public origin and repeated
+authenticated responses. A configuration template alone is not live evidence.
+
+References: [Core API specification](https://bunny.net/docs/api-reference/core/openapi.json),
+[routing filters](https://bunny.net/docs/cdn/performance/routing-filters),
+[custom hostnames](https://bunny.net/docs/cdn/custom-hostname).
 
 ## Previous OIDC application manifest
 

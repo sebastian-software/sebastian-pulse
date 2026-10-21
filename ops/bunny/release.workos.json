@@ -1,0 +1,7 @@
+{
+  "image": "ghcr.io/sebastian-software/sebastian-pulse",
+  "imageTag": "0862cb368223626795f96432bf2e0686c3f3658a",
+  "imageDigest": "sha256:6a90f3f250158cb14b65ee58a292dfd2128c05899b2afea27cf610bd8c761d3b",
+  "platform": "linux/amd64",
+  "verifiedBy": "https://github.com/sebastian-software/sebastian-pulse/actions/runs/39512342127"
+}
